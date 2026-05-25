@@ -27,6 +27,11 @@ import com.collabwise.ui.components.Navy
 import com.collabwise.ui.components.UserAvatar
 import com.collabwise.viewmodel.DashboardViewModel
 import com.collabwise.R
+import com.collabwise.ui.components.AppDrawer
+import com.collabwise.ui.components.DrawerItem
+import com.collabwise.ui.navigation.Screen
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val bannerColors = listOf(
     Color(0xFF1a73e8), Color(0xFFe53935), Color(0xFF2e7d32),
@@ -43,10 +48,16 @@ fun DashboardScreen(
     onGroupClick: (String) -> Unit,
     onNotificationsClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onNavigate: (Screen) -> Unit = {}, // 👈 ADD THIS for drawer navigation
+    onLogout: () -> Unit = {},         // 👈 ADD THIS
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
+
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -59,119 +70,162 @@ fun DashboardScreen(
         uiState.currentUser?.name?.split(" ")?.firstOrNull().orEmpty()
     }
 
-    Scaffold(
-        topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .background(Color.White)
-                    .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "CollabWise",
-                    fontSize = 18.sp,
-                    color = Color.Green,
-                    fontFamily = FontFamily(
-                        Font(R.font.protest_riot_regular)
-                    ),
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 10.dp)
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            AppDrawer(
+                onGroupsClick = {
+                    scope.launch {
+                        drawerState.close()
+                        delay(50)
+                        onNavigate(Screen.Dashboard)
+                    }
+                },
+                onNotificationsClick = {
+                    scope.launch {
+                        drawerState.close()
+                        delay(50)
+                        onNavigate(Screen.Notifications)
+                    }
+                },
+                onTodoClick = {
+                    scope.launch {
+                        drawerState.close()
+                        delay(50)
+                        onNavigate(Screen.Dashboard)
+                    } // Change to TODO
+                },
+                onLogoutClick = {
+                    scope.launch {
+                        drawerState.close()
+                        delay(50)
+                        onLogout()
+                    }
+                }
+            )
+        }
+    ) {
+
+        Scaffold(
+
+            topBar = {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .background(Color.White)
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    // 🔥 MENU BUTTON (NEW)
+                    IconButton(
+                        onClick = {
+                            scope.launch { drawerState.open() }
+                        }
+                    ) {
+                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                    }
+
+                    Text(
+                        text = "CollabWise",
+                        fontSize = 24.sp,
+                        color = Color.Green,
+                        fontFamily = FontFamily(Font(R.font.protest_riot_regular)),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+
+                    Spacer(Modifier.weight(1f))
+
+                    BadgedBox(
+                        badge = {
+                            if (uiState.unreadCount > 0) {
+                                Badge {
+                                    Text(
+                                        if (uiState.unreadCount > 9) "9+" else uiState.unreadCount.toString(),
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+                        }
+                    ) {
+                        IconButton(onClick = onNotificationsClick) {
+                            Icon(Icons.Default.Notifications, null)
+                        }
+                    }
+
+                    IconButton(onClick = onProfileClick) {
+                        if (uiState.currentUser != null) {
+                            UserAvatar(
+                                name = uiState.currentUser!!.name,
+                                size = 28
+                            )
+                        } else {
+                            Icon(Icons.Default.Person, null)
+                        }
+                    }
+                }
+            },
+
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = { viewModel.showCreateGroup() },
+                    containerColor = Navy,
+                    contentColor = Color.White,
+                    icon = { Icon(Icons.Default.Add, null) },
+                    text = { Text("New group") }
                 )
+            },
 
-                Spacer(Modifier.weight(1f))
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { padding ->
 
-                BadgedBox(
-                    badge = {
-                        if (uiState.unreadCount > 0) {
-                            Badge {
+            // 🔥 YOUR EXISTING UI UNCHANGED
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+
+                when {
+                    uiState.isLoading -> LoadingOverlay()
+
+                    uiState.groups.isEmpty() -> EmptyState(
+                        emoji = "🏫",
+                        title = "No groups yet",
+                        subtitle = "Create your first group to get started.",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+
+                    else -> LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+
+                        item {
+                            Column(Modifier.padding(bottom = 8.dp)) {
                                 Text(
-                                    if (uiState.unreadCount > 9) "9+" else uiState.unreadCount.toString(),
-                                    fontSize = 10.sp
+                                    text = "Welcome, $firstName",
+                                    style = MaterialTheme.typography.headlineMedium
+                                )
+                                Text(
+                                    text = "${uiState.groups.size} group(s)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                 )
                             }
                         }
-                    }
-                ) {
-                    IconButton(onClick = onNotificationsClick) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = null
-                        )
-                    }
-                }
 
-                IconButton(onClick = onProfileClick) {
-                    if (uiState.currentUser != null) {
-                        UserAvatar(
-                            name = uiState.currentUser!!.name,
-                            size = 28
-                        )
-                    } else {
-                        Icon(Icons.Default.Person, contentDescription = null)
-                    }
-                }
-            }
-        },
-
-        // ✅ FIXED: no global role assumption anymore
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { viewModel.showCreateGroup() },
-                containerColor = Navy,
-                contentColor = Color.White,
-                icon = { Icon(Icons.Default.Add, null) },
-                text = { Text("New group") }
-            )
-        },
-
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-
-            when {
-                uiState.isLoading -> LoadingOverlay()
-
-                uiState.groups.isEmpty() -> EmptyState(
-                    emoji = "🏫",
-                    title = "No groups yet",
-                    subtitle = "Create your first group to get started.",
-                    modifier = Modifier.align(Alignment.Center)
-                )
-
-                else -> LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-
-                    item {
-                        Column(Modifier.padding(bottom = 8.dp)) {
-                            Text(
-                                text = "Welcome, $firstName",
-                                style = MaterialTheme.typography.headlineMedium
-                            )
-                            Text(
-                                text = "${uiState.groups.size} group(s)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        items(uiState.groups, key = { it.id }) { group ->
+                            GroupCard(
+                                group = group,
+                                onClick = { onGroupClick(group.id) }
                             )
                         }
-                    }
 
-                    items(uiState.groups, key = { it.id }) { group ->
-                        GroupCard(
-                            group = group,
-                            onClick = { onGroupClick(group.id) }
-                        )
+                        item { Spacer(Modifier.height(72.dp)) }
                     }
-
-                    item { Spacer(Modifier.height(72.dp)) }
                 }
             }
         }

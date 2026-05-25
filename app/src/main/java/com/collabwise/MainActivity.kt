@@ -147,6 +147,20 @@ fun AppNavGraph(
                 },
                 onProfileClick = {
                     navController.navigate(Screen.Profile.route)
+                },
+                // 🆕 Drawer navigation actions
+                onNavigate = { screen ->
+                    navController.navigate(screen.route) {
+                        popUpTo(Screen.Dashboard.route) {
+                            inclusive = false
+                        }
+                        launchSingleTop = true
+                    }
+                },
+
+                // 🆕 Logout handling
+                onLogout = {
+                    viewModel.logout()
                 }
             )
         }

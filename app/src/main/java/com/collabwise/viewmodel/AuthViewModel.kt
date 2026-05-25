@@ -110,7 +110,10 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         authRepository.logout()
+
         _currentUser.value = null
+        _error.value = null
+        _isLoading.value = false
     }
 
     // ── LOAD CURRENT USER ─────────────────────────────────────
