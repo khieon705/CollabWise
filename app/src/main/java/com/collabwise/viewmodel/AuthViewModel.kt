@@ -4,12 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collabwise.data.model.User
 import com.collabwise.data.repository.AuthRepository
+import com.collabwise.data.repository.AuthState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,30 +15,35 @@ class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    // ── UI state ───────────────────────────────────────────────
+    // ── UI STATE ───────────────────────────────────────────────
 
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
-    val isLoading = _isLoading.asStateFlow()
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
-    val error = _error.asStateFlow()
+    val error: StateFlow<String?> = _error.asStateFlow()
 
-    // ✅ AUTH STATE (FROM FIREBASE ONLY)
-    val isLoggedIn = authRepository.authState
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            false
-        )
+    // ── AUTH STATE (SOURCE OF TRUTH) ───────────────────────────
+
+    val isLoggedIn: StateFlow<Boolean> =
+        authRepository.authState
+            .map { state ->
+                state is AuthState.LoggedIn
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = false
+            )
 
     init {
         loadCurrentUser()
     }
 
-    // ── Login ───────────────────────────────────────────────
+    // ── LOGIN ─────────────────────────────────────────────────
 
     fun login(
         email: String,
@@ -65,7 +67,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // ── Register ─────────────────────────────────────────────
+    // ── REGISTER ──────────────────────────────────────────────
 
     fun register(
         name: String,
@@ -73,7 +75,6 @@ class AuthViewModel @Inject constructor(
         password: String,
         onSuccess: (() -> Unit)? = null
     ) {
-
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
@@ -91,14 +92,14 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // ── Logout ───────────────────────────────────────────────
+    // ── LOGOUT ────────────────────────────────────────────────
 
     fun logout() {
         authRepository.logout()
         _currentUser.value = null
     }
 
-    // ── Load user ─────────────────────────────────────────────
+    // ── LOAD CURRENT USER ─────────────────────────────────────
 
     fun loadCurrentUser() {
         viewModelScope.launch {

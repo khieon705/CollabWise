@@ -1,33 +1,13 @@
 package com.collabwise.ui.auth
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,10 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,141 +23,151 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.collabwise.viewmodel.AuthViewModel
 import com.collabwise.R
+import androidx.compose.runtime.getValue
 
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
-    onLoginSuccess: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
 
-    // ── Form State ──────────────────────────────────────────────────────────
-
+    // ── FORM STATE ─────────────────────────────────────────────
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // ── ViewModel State ─────────────────────────────────────────────────────
-
+    // ── VIEWMODEL STATE ────────────────────────────────────────
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
-
-    // ── Navigate when logged in ─────────────────────────────────────────────
-
-
-    // ── UI Layout Here ──────────────────────────────────────────────────────
+    val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+    // ── NAVIGATION IS HANDLED BY NAVHOST ───────────────────────
+    // (so we do NOTHING here)
+
+    // Optional: just clear error display
+    LaunchedEffect(error) {
+        error?.let {
+            snackbarHostState.showSnackbar(it)
         }
-    ) { paddingValues ->
+    }
+
+    val appNameFont = FontFamily(Font(R.font.protest_riot_regular))
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(padding)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            Spacer(modifier = Modifier.height(125.dp))
 
-            val appNameFont = FontFamily(Font(R.font.protest_riot_regular))
+            Spacer(modifier = Modifier.height(120.dp))
 
             Text(
                 text = "CollabWise",
                 fontFamily = appNameFont,
-                fontSize = 45.sp,
+                fontSize = 44.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(50.dp))
 
-            EmailTextField(
-                email = email,
-                onEmailChange = { email = it }
+            // EMAIL
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            PasswordTextField(
-                password = password,
-                onPasswordChange = { password = it },
-                passwordVisible = passwordVisible,
-                onPasswordVisible = { passwordVisible = it }
+            // PASSWORD
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation =
+                    if (passwordVisible) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { passwordVisible = !passwordVisible }
+                    ) {
+                        Icon(
+                            imageVector =
+                                if (passwordVisible)
+                                    Icons.Default.Visibility
+                                else
+                                    Icons.Default.VisibilityOff,
+                            contentDescription = null
+                        )
+                    }
+                }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
+            // LOGIN BUTTON
             Button(
                 onClick = {
-                    viewModel.login(email, password) {
-                        onLoginSuccess()
-                    }
+                    viewModel.login(email, password)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
-                shape = RoundedCornerShape(4.dp),
+                shape = RoundedCornerShape(6.dp),
+                enabled = !isLoading
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier
-                            .width(24.dp)
-                            .height(24.dp),
                         color = Color.White,
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp)
                     )
                 } else {
-                    Text(
-                        text = "Sign In",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Sign In", fontWeight = FontWeight.Bold)
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Forget Password",
-                color = MaterialTheme.colorScheme.tertiary,
-                fontSize = 13.sp,
+                text = "Forgot password?",
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-                // Unclickalble for now
-                /*modifier = Modifier.clickable {
-                    onForgetPassword()
-                }*/
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // REGISTER NAVIGATION ONLY (allowed)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 40.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = "New to CollabWise? ",
-                    color = Color(0xFFB3B3B3),
-                    fontSize = 14.sp
-                )
+                Text("New to CollabWise? ")
 
                 Text(
-                    text = "Sign up now",
+                    text = "Sign up",
                     color = MaterialTheme.colorScheme.primary,
-                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
                         onNavigateToRegister()

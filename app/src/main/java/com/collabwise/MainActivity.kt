@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.collabwise.ui.auth.LoginScreen
 import com.collabwise.ui.auth.RegisterScreen
+import com.collabwise.ui.dashboard.DashboardScreen
 import com.collabwise.ui.navigation.Screen
 import com.collabwise.ui.theme.CollabwiseTheme
 import com.collabwise.viewmodel.AuthViewModel
@@ -65,23 +67,20 @@ class MainActivity : ComponentActivity() {
 }
 @Composable
 fun AppNavGraph(
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
 
-    val viewModel: AuthViewModel = hiltViewModel()
+    val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
 
-    val isLoggedIn =
-        viewModel.isLoggedIn.collectAsStateWithLifecycle().value
-
-    // Prevent repeated navigation
+    // SINGLE navigation authority
     LaunchedEffect(isLoggedIn) {
 
-        val destination =
-            if (isLoggedIn) {
-                Screen.Dashboard.route
-            } else {
-                Screen.Login.route
-            }
+        val destination = if (isLoggedIn) {
+            Screen.Dashboard.route
+        } else {
+            Screen.Login.route
+        }
 
         navController.navigate(destination) {
             popUpTo(0) { inclusive = true }
@@ -95,50 +94,36 @@ fun AppNavGraph(
     ) {
 
         composable(Screen.Login.route) {
-
             LoginScreen(
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
-                },
-                onLoginSuccess = {
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.Login.route) {
-                            inclusive = true
-                        }
-                    }
                 }
             )
         }
 
-        // ── REGISTER ────────────────────────────────────────────────
         composable(Screen.Register.route) {
             RegisterScreen(
                 onNavigateToLogin = {
                     navController.popBackStack()
-                },
-                onRegisterSuccess =  {
-                    navController.navigate(Screen.Dashboard.route) {
-                        popUpTo(Screen.Login.route) {
-                            inclusive = true
-                        }
-                    }
                 }
             )
         }
 
-        /*
-        // ── DASHBOARD ────────────────────────────────────────────────
         composable(Screen.Dashboard.route) {
             DashboardScreen(
-                onLogout = {
-                    viewModel.logout()
+                onGroupClick = { groupId ->
+                    navController.navigate(Screen.Organization.createRoute(groupId))
+                },
+                onNotificationsClick = {
+                    navController.navigate(Screen.Notifications.route)
+                },
+                onProfileClick = {
+                    navController.navigate(Screen.Profile.route)
                 }
             )
         }
-        */
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

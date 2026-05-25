@@ -11,6 +11,13 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+// ── AUTH STATE ───────────────────────────────────────────────────────────────
+
+sealed class AuthState {
+    data object LoggedOut : AuthState()
+    data class LoggedIn(val user: User) : AuthState()
+}
+
 @Singleton
 class AuthRepository @Inject constructor(
     private val auth: FirebaseAuth,
@@ -18,7 +25,7 @@ class AuthRepository @Inject constructor(
     private val userRepository: UserRepository
 ) {
 
-    // ── Firebase state ────────────────────────────────────────────────
+    // ── Firebase shortcuts ────────────────────────────────────────────────
 
     val currentFirebaseUser: FirebaseUser?
         get() = auth.currentUser
@@ -26,36 +33,68 @@ class AuthRepository @Inject constructor(
     val currentUid: String?
         get() = auth.currentUser?.uid
 
-    // ✅ SINGLE SOURCE OF TRUTH (REACTIVE)
-    val authState: Flow<Boolean> = callbackFlow {
+    // ── SINGLE SOURCE OF TRUTH (AUTH STATE) ───────────────────────────────
+
+    val authState: Flow<AuthState> = callbackFlow {
 
         val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-            trySend(firebaseAuth.currentUser != null)
+
+            val firebaseUser = firebaseAuth.currentUser
+
+            if (firebaseUser == null) {
+                trySend(AuthState.LoggedOut)
+                return@AuthStateListener
+            }
+
+            // Fetch user profile from Firestore
+            db.collection("users")
+                .document(firebaseUser.uid)
+                .get()
+                .addOnSuccessListener { snapshot ->
+
+                    val user = snapshot.toObject(User::class.java)
+
+                    if (user != null) {
+                        trySend(AuthState.LoggedIn(user))
+                    } else {
+                        trySend(AuthState.LoggedOut)
+                    }
+                }
+                .addOnFailureListener {
+                    trySend(AuthState.LoggedOut)
+                }
         }
 
+        // register listener
         auth.addAuthStateListener(listener)
 
-        // initial value
-        trySend(auth.currentUser != null)
+        // initial emission (prevents empty UI state)
+        val initialUser = auth.currentUser
+
+        if (initialUser == null) {
+            trySend(AuthState.LoggedOut)
+        }
 
         awaitClose {
             auth.removeAuthStateListener(listener)
         }
     }
 
-    // ── Register ─────────────────────────────────────────────────────
+    // ── REGISTER ───────────────────────────────────────────────────────────
 
     suspend fun register(
         name: String,
         email: String,
-        password: String,
+        password: String
     ): Result<User> = runCatching {
 
-        val authResult =
-            auth.createUserWithEmailAndPassword(email, password).await()
+        val result = auth.createUserWithEmailAndPassword(
+            email.trim(),
+            password
+        ).await()
 
-        val uid = authResult.user?.uid
-            ?: error("No UID returned from Firebase")
+        val uid = result.user?.uid
+            ?: error("Firebase did not return UID")
 
         val user = User(
             uid = uid,
@@ -65,8 +104,12 @@ class AuthRepository @Inject constructor(
         )
 
         try {
-            db.collection("users").document(uid).set(user).await()
+            db.collection("users")
+                .document(uid)
+                .set(user)
+                .await()
         } catch (e: Exception) {
+            // rollback auth if firestore fails
             auth.currentUser?.delete()?.await()
             throw e
         }
@@ -74,23 +117,26 @@ class AuthRepository @Inject constructor(
         user
     }
 
-    // ── Login ────────────────────────────────────────────────────────
+    // ── LOGIN ─────────────────────────────────────────────────────────────
 
-    suspend fun login(email: String, password: String): Result<Unit> =
-        runCatching {
-            auth.signInWithEmailAndPassword(
-                email.trim(),
-                password
-            ).await()
-        }
+    suspend fun login(
+        email: String,
+        password: String
+    ): Result<Unit> = runCatching {
 
-    // ── Logout ───────────────────────────────────────────────────────
+        auth.signInWithEmailAndPassword(
+            email.trim(),
+            password
+        ).await()
+    }
+
+    // ── LOGOUT ────────────────────────────────────────────────────────────
 
     fun logout() {
         auth.signOut()
     }
 
-    // ── User profile ──────────────────────────────────────────────────
+    // ── USER PROFILE FETCH (fallback only) ────────────────────────────────
 
     suspend fun getCurrentUserProfile(): User? {
         val uid = currentUid ?: return null
