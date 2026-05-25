@@ -1,0 +1,228 @@
+package com.collabwise.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.collabwise.data.model.Group
+import com.collabwise.ui.dashboard.bannerColorFor
+import kotlin.collections.joinToString
+import kotlin.collections.mapNotNull
+import kotlin.collections.take
+import kotlin.text.firstOrNull
+import kotlin.text.split
+import kotlin.text.uppercase
+
+@Composable
+fun UserAvatar(
+    name: String,
+    modifier: Modifier = Modifier,
+    size: Int = 48
+) {
+    val initials = name
+        .split(" ")
+        .take(2)
+        .mapNotNull { it.firstOrNull()?.toString() }
+        .joinToString("")
+        .uppercase()
+
+    Box(
+        modifier = modifier
+            .size(size.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = initials,
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontWeight = FontWeight.Bold,
+            fontSize = (size * 0.35).sp
+        )
+    }
+}
+
+@Composable
+fun GroupCard(
+    group: Group,
+    onClick: () -> Unit
+) {
+    val color = bannerColorFor(group.id)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+
+        Column {
+
+            // ── TOP COLOR STRIP (Google Classroom style) ──
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(color)
+            ) {
+
+                // initials circle (optional Classroom-like touch)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 12.dp)
+                        .size(36.dp)
+                        .background(
+                            color = Color.White.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(50)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = group.name.take(2).uppercase(),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+
+            // ── BODY ──
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+
+                Text(
+                    text = group.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                if (group.description.isNotBlank()) {
+                    Spacer(Modifier.height(4.dp))
+
+                    Text(
+                        text = group.description,
+                        fontSize = 13.sp,
+                        color = Color.Gray,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // footer row (simple classroom-style metadata area)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Group,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier.size(16.dp)
+                    )
+
+                    Spacer(Modifier.width(6.dp))
+
+                    Text(
+                        text = "Open class",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+
+                    Spacer(Modifier.weight(1f))
+
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = Color.LightGray
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyState(
+    emoji: String,
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = emoji,
+            fontSize = 48.sp
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        Text(
+            text = title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Black
+        )
+
+        Spacer(Modifier.height(6.dp))
+
+        Text(
+            text = subtitle,
+            fontSize = 13.sp,
+            color = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun LoadingOverlay() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            color = Navy
+        )
+    }
+}
+
+val Navy = Color(0xFF1F2A44)
+val Red  = Color(0xFFE53935)

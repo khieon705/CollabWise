@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1053694351010",
+    "project_id": "collabwise-c588d",
+    "storage_bucket": "collabwise-c588d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053694351010:android:80df12b6dabc45e0f6a9fb",
+        "android_client_info": {
+          "package_name": "com.collabwise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDf5LlH0EtL2kJHAtudZUeaDFO_VwP4UTk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053694351010:android:24095d2161f5f4a4f6a9fb",
+        "android_client_info": {
+          "package_name": "com.example.collabwise"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDf5LlH0EtL2kJHAtudZUeaDFO_VwP4UTk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
