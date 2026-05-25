@@ -35,10 +35,16 @@ fun GroupScreen(
     onProjectClick: (groupId: String, projectId: String) -> Unit,
     viewModel: GroupViewModel = hiltViewModel()
 ) {
-    val uiState        by viewModel.uiState.collectAsState()
-    var selectedTab    by remember { mutableIntStateOf(0) }
-    val tabs           = listOf("Projects", "Members")
-    val snackbarHost   = remember { SnackbarHostState() }
+
+    val uiState by viewModel.uiState.collectAsState()
+
+    var selectedTab by remember {
+        mutableIntStateOf(0)
+    }
+
+    val tabs = listOf("Projects", "Members")
+
+    val snackbarHost = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
@@ -48,54 +54,86 @@ fun GroupScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text       = uiState.group?.name ?: "",
-                            fontWeight = FontWeight.Medium,
-                            maxLines   = 1,
-                            overflow   = TextOverflow.Ellipsis
-                        )
-                        if (uiState.group?.description?.isNotBlank() == true) {
-                            Text(
-                                text     = uiState.group!!.description,
-                                fontSize = 12.sp,
-                                color    = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    if (uiState.isLeader) {
-                        IconButton(onClick = { viewModel.showInvite() }) {
-                            Icon(Icons.Default.PersonAdd, contentDescription = "Invite member")
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        },
-        floatingActionButton = {
-            if (uiState.isLeader && selectedTab == 0) {
-                FloatingActionButton(
-                    onClick        = { viewModel.showCreateProject() },
-                    containerColor = Color.Red,
-                    contentColor   = Color.White
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onBack
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "New project")
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 4.dp)
+                ) {
+                    Text(
+                        text = uiState.group?.name ?: "",
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    if (uiState.group?.description?.isNotBlank() == true) {
+                        Text(
+                            text = uiState.group!!.description,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.secondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                if (uiState.isLeader) {
+                    IconButton(
+                        onClick = {
+                            viewModel.showInvite()
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = "Invite member",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 }
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHost) }
+
+        floatingActionButton = {
+            if (uiState.isLeader && selectedTab == 0) {
+                FloatingActionButton(
+                    onClick = {
+                        viewModel.showCreateProject()
+                    },
+                    containerColor =
+                        MaterialTheme.colorScheme.primary,
+                    contentColor =
+                        MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "New project"
+                    )
+                }
+            }
+        },
+
+        snackbarHost = {
+            SnackbarHost(snackbarHost)
+        }
     ) { padding ->
 
         Column(
@@ -103,51 +141,67 @@ fun GroupScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Group color banner strip
             uiState.group?.let { group ->
                 Surface(
-                    color    = bannerColorFor(group.id),
+                    color = bannerColorFor(group.id),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp)
-                ) { }
+                ) {}
             }
 
-            // Tab row
             TabRow(
                 selectedTabIndex = selectedTab,
-                containerColor   = Color.White
+                containerColor =
+                    MaterialTheme.colorScheme.background,
+                contentColor =
+                    MaterialTheme.colorScheme.primary
             ) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
                         selected = selectedTab == index,
-                        onClick  = { selectedTab = index },
+                        onClick = {
+                            selectedTab = index
+                        },
+                        selectedContentColor =
+                            MaterialTheme.colorScheme.primary,
+                        unselectedContentColor =
+                            MaterialTheme.colorScheme.secondary,
                         text = {
                             Row(
-                                verticalAlignment    = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalAlignment =
+                                    Alignment.CenterVertically,
+                                horizontalArrangement =
+                                    Arrangement.spacedBy(6.dp)
                             ) {
                                 Text(title)
-                                // Badge counts
                                 val count = when (index) {
                                     0 -> uiState.projects.size
                                     1 -> uiState.members.size
                                     else -> 0
                                 }
+
                                 if (count > 0) {
                                     Surface(
-                                        color = if (selectedTab == index)
-                                            Color.Red.copy(alpha = 0.1f)
-                                        else
-                                            MaterialTheme.colorScheme.surfaceVariant,
+                                        color =
+                                            if (selectedTab == index)
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                            else
+                                                MaterialTheme.colorScheme.surface,
                                         shape = RoundedCornerShape(20.dp)
                                     ) {
                                         Text(
-                                            text     = count.toString(),
+                                            text = count.toString(),
                                             fontSize = 11.sp,
-                                            color    = if (selectedTab == index) Color.Red
-                                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                            color =
+                                                if (selectedTab == index)
+                                                    MaterialTheme.colorScheme.primary
+                                                else
+                                                    MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.padding(
+                                                horizontal = 7.dp,
+                                                vertical = 2.dp
+                                            )
                                         )
                                     }
                                 }
@@ -157,43 +211,58 @@ fun GroupScreen(
                 }
             }
 
-            // Tab content
             when {
-                uiState.isLoading -> LoadingOverlay()
-                selectedTab == 0  -> ProjectsTab(
-                    projects        = uiState.projects,
-                    groupId         = uiState.group?.id ?: "",
-                    isLeader        = uiState.isLeader,
-                    onProjectClick  = onProjectClick
-                )
-                else -> MembersTab(
-                    members     = uiState.members,
-                    leaderId    = uiState.group?.leaderId ?: "",
-                    currentUid  = uiState.currentUser?.uid ?: "",
-                    isLeader    = uiState.isLeader,
-                    onRemove    = { viewModel.removeMember(it) }
-                )
+                uiState.isLoading -> {
+                    LoadingOverlay()
+                }
+
+                selectedTab == 0 -> {
+                    ProjectsTab(
+                        projects = uiState.projects,
+                        groupId = uiState.group?.id ?: "",
+                        isLeader = uiState.isLeader,
+                        onProjectClick = onProjectClick
+                    )
+                }
+
+                else -> {
+                    MembersTab(
+                        members = uiState.members,
+                        leaderId = uiState.group?.leaderId ?: "",
+                        currentUid = uiState.currentUser?.uid ?: "",
+                        isLeader = uiState.isLeader,
+                        onRemove = {
+                            viewModel.removeMember(it)
+                        }
+                    )
+                }
             }
         }
     }
 
-    // Invite dialog
     if (uiState.showInvite) {
         InviteDialog(
-            isLoading    = uiState.isInviting,
+            isLoading = uiState.isInviting,
             errorMessage = uiState.inviteError,
-            onDismiss    = { viewModel.dismissInvite() },
-            onInvite     = { viewModel.inviteMember(it) }
+            onDismiss = {
+                viewModel.dismissInvite()
+            },
+            onInvite = {
+                viewModel.inviteMember(it)
+            }
         )
     }
 
-    // Create project dialog
     if (uiState.showCreateProject) {
         CreateProjectDialog(
-            isLoading    = uiState.isCreatingProject,
+            isLoading = uiState.isCreatingProject,
             errorMessage = uiState.createProjectError,
-            onDismiss    = { viewModel.dismissCreateProject() },
-            onCreate     = { name, desc -> viewModel.createProject(name, desc) }
+            onDismiss = {
+                viewModel.dismissCreateProject()
+            },
+            onCreate = { name, desc ->
+                viewModel.createProject(name, desc)
+            }
         )
     }
 }
@@ -209,78 +278,110 @@ private fun ProjectsTab(
 ) {
     if (projects.isEmpty()) {
         EmptyState(
-            emoji    = "\uD83D\uDCCB",
-            title    = "No projects yet",
-            subtitle = if (isLeader)
-                "Tap + to create the first project."
-            else
-                "No projects have been created yet.",
+            emoji = "\uD83D\uDCCB",
+            title = "No projects yet",
+            subtitle =
+                if (isLeader)
+                    "Tap + to create the first project."
+                else
+                    "No projects have been created yet.",
             modifier = Modifier.fillMaxWidth()
         )
         return
     }
 
     LazyColumn(
-        contentPadding      = PaddingValues(16.dp),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier            = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         items(projects, key = { it.id }) { project ->
             ProjectCard(
-                project  = project,
-                onClick  = { onProjectClick(groupId, project.id) }
+                project = project,
+                onClick = {
+                    onProjectClick(groupId, project.id)
+                }
             )
         }
-        item { Spacer(modifier = Modifier.height(72.dp)) }
+
+        item {
+            Spacer(
+                modifier = Modifier.height(72.dp)
+            )
+        }
     }
 }
 
 @Composable
-fun ProjectCard(project: Project, onClick: () -> Unit) {
+fun ProjectCard(
+    project: Project,
+    onClick: () -> Unit
+) {
+    val isActive = project.status == ProjectStatus.ACTIVE.name
+
     Card(
-        modifier  = Modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape     = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        colors    = CardDefaults.cardColors(containerColor = Color.White)
+            .clickable {
+                onClick()
+            },
+        shape = RoundedCornerShape(10.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 1.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
         Row(
-            modifier          = Modifier.padding(16.dp),
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Folder icon
-            val isActive = project.status == ProjectStatus.ACTIVE.name
             Surface(
-                color    = if (isActive) Color(0xFFE8F0FE) else Color(0xFFF1F3F4),
-                shape    = RoundedCornerShape(8.dp),
+                color =
+                    if (isActive)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.size(44.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
-                        imageVector        = Icons.Default.Folder,
+                        imageVector = Icons.Default.Folder,
                         contentDescription = null,
-                        tint               = if (isActive) Color(0xFF1967D2) else Color(0xFF5F6368),
-                        modifier           = Modifier.size(22.dp)
+                        tint =
+                            if (isActive)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.secondary,
+
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
-                    text       = project.name,
+                    text = project.name,
                     fontWeight = FontWeight.Medium,
-                    fontSize   = 14.sp,
-                    maxLines   = 1,
-                    overflow   = TextOverflow.Ellipsis
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
                 if (project.description.isNotBlank()) {
                     Text(
-                        text     = project.description,
+                        text = project.description,
                         fontSize = 12.sp,
-                        color    = Color(0xFF5F6368),
+                        color = MaterialTheme.colorScheme.secondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 2.dp)
@@ -290,25 +391,35 @@ fun ProjectCard(project: Project, onClick: () -> Unit) {
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Status badge
             Surface(
-                color = if (isActive) Color(0xFFE6F4EA) else Color(0xFFF1F3F4),
+                color =
+                    if (isActive)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    else
+                        MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Text(
-                    text       = project.status,
-                    fontSize   = 11.sp,
+                    text = project.status,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color      = if (isActive) Color(0xFF137333) else Color(0xFF5F6368),
-                    modifier   = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                    color =
+                        if (isActive)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 3.dp
+                    )
                 )
             }
 
             Icon(
-                imageVector        = Icons.Default.ChevronRight,
+                imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint               = Color(0xFFDADCE0),
-                modifier           = Modifier
+                tint = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier
                     .padding(start = 4.dp)
                     .size(16.dp)
             )
@@ -326,12 +437,13 @@ private fun MembersTab(
     isLeader: Boolean,
     onRemove: (String) -> Unit
 ) {
+
     var removingUid by remember { mutableStateOf<String?>(null) }
 
     if (members.isEmpty()) {
         EmptyState(
-            emoji    = "\uD83D\uDC65",
-            title    = "No members",
+            emoji = "\uD83D\uDC65",
+            title = "No members",
             subtitle = "Invite members using the person icon above.",
             modifier = Modifier.fillMaxWidth()
         )
@@ -339,43 +451,73 @@ private fun MembersTab(
     }
 
     LazyColumn(
-        contentPadding      = PaddingValues(16.dp),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier            = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         items(members, key = { it.uid }) { member ->
             MemberCard(
-                member     = member,
-                isLeader   = member.uid == leaderId,
+                member = member,
+                isLeader = member.uid == leaderId,
                 isCurrentUser = member.uid == currentUid,
-                canRemove  = isLeader && member.uid != leaderId,
-                onRemove   = { removingUid = member.uid }
+                canRemove = isLeader && member.uid != leaderId,
+                onRemove = {
+                    removingUid = member.uid
+                }
             )
         }
     }
 
-    // Confirm remove dialog
     removingUid?.let { uid ->
         val member = members.find { it.uid == uid }
+
         AlertDialog(
-            onDismissRequest = { removingUid = null },
-            title = { Text("Remove member") },
-            text  = {
+            onDismissRequest = {
+                removingUid = null
+            },
+            containerColor =
+                MaterialTheme.colorScheme.surface,
+            title = {
                 Text(
-                    "Remove ${member?.name ?: "this member"} from the group? " +
-                            "They will lose access to all projects and tasks."
+                    text = "Remove member",
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    text =
+                        "Remove ${member?.name ?: "this member"} from the group? " +
+                                "They will lose access to all projects and tasks.",
+                    color = MaterialTheme.colorScheme.secondary
                 )
             },
             confirmButton = {
                 Button(
-                    onClick = { onRemove(uid); removingUid = null },
-                    colors  = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                    onClick = {
+                        onRemove(uid)
+                        removingUid = null
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor =
+                            MaterialTheme.colorScheme.error,
+                        contentColor =
+                            MaterialTheme.colorScheme.onError
                     )
-                ) { Text("Remove") }
+                ) {
+                    Text("Remove")
+                }
             },
             dismissButton = {
-                TextButton(onClick = { removingUid = null }) { Text("Cancel") }
+                TextButton(
+                    onClick = {
+                        removingUid = null
+                    }
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         )
     }
@@ -391,75 +533,96 @@ private fun MemberCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors   = CardDefaults.cardColors(containerColor = Color.White),
-        shape    = RoundedCornerShape(8.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(10.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                UserAvatar(name = member.name, size = 40)
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                UserAvatar(
+                    name = member.name,
+                    size = 40
+                )
+
                 Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Row(
-                        verticalAlignment    = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text       = member.name + if (isCurrentUser) " (you)" else "",
+                            text = member.name + if (isCurrentUser) " (you)" else "",
                             fontWeight = FontWeight.Medium,
-                            fontSize   = 14.sp
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+
                         if (isLeader) {
                             Surface(
-                                color = Color(0xFFE8F0FE),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                                 shape = RoundedCornerShape(20.dp)
                             ) {
                                 Text(
-                                    text     = "Leader",
+                                    text = "Leader",
                                     fontSize = 10.sp,
-                                    color    = Color.Red,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                    modifier = Modifier.padding(
+                                        horizontal = 8.dp,
+                                        vertical = 2.dp
+                                    )
                                 )
                             }
                         }
                     }
+
                     Text(
-                        text     = member.email,
+                        text = member.email,
                         fontSize = 12.sp,
-                        color    = Color(0xFF5F6368)
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 }
+
                 if (canRemove) {
-                    IconButton(onClick = onRemove) {
+                    IconButton(
+                        onClick = onRemove
+                    ) {
                         Icon(
-                            imageVector        = Icons.Default.PersonRemove,
+                            imageVector = Icons.Default.PersonRemove,
                             contentDescription = "Remove member",
-                            tint               = Color(0xFF5F6368)
+                            tint = MaterialTheme.colorScheme.secondary
                         )
                     }
                 }
             }
 
-            // Skills row
             if (member.skillIds.isNotEmpty()) {
-                // We show skill IDs here — in a real app you'd resolve
-                // IDs to names via SkillRepository. For now show count.
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier          = Modifier.padding(start = 52.dp)
+                    modifier = Modifier.padding(start = 52.dp)
                 ) {
                     Icon(
-                        imageVector        = Icons.Default.Star,
+                        imageVector = Icons.Default.Star,
                         contentDescription = null,
-                        tint               = Color(0xFF5F6368),
-                        modifier           = Modifier.size(12.dp)
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(12.dp)
                     )
+
                     Spacer(modifier = Modifier.width(4.dp))
+
                     Text(
-                        text     = "${member.skillIds.size} skill${if (member.skillIds.size != 1) "s" else ""} declared",
+                        text = "${member.skillIds.size} skill${if (member.skillIds.size != 1) "s" else ""} declared",
                         fontSize = 12.sp,
-                        color    = Color(0xFF5F6368)
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 }
             }
@@ -476,52 +639,99 @@ fun InviteDialog(
     onDismiss: () -> Unit,
     onInvite: (String) -> Unit
 ) {
+
     var email by remember { mutableStateOf("") }
 
     AlertDialog(
-        onDismissRequest = { if (!isLoading) onDismiss() },
-        title = { Text("Invite member", fontWeight = FontWeight.Medium) },
+        onDismissRequest = {
+            if (!isLoading) onDismiss()
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = {
+            Text(
+                text = "Invite member",
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
         text = {
             Column {
                 if (errorMessage != null) {
                     Card(
-                        colors   = CardDefaults.cardColors(containerColor = Color(0xFFFCE8E8)),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                        colors = CardDefaults.cardColors(
+                            containerColor =
+                                MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp)
                     ) {
                         Text(
-                            text     = errorMessage,
-                            color    = Color(0xFFC5221F),
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
                             fontSize = 12.sp,
                             modifier = Modifier.padding(10.dp)
                         )
                     }
                 }
+
                 OutlinedTextField(
-                    value         = email,
-                    onValueChange = { email = it },
-                    label         = { Text("Email address") },
-                    placeholder   = { Text("e.g. maria@pup.edu.ph") },
-                    singleLine    = true,
-                    modifier      = Modifier.fillMaxWidth()
+                    value = email,
+                    onValueChange = {
+                        email = it
+                    },
+                    label = {
+                        Text("Email address")
+                    },
+                    placeholder = {
+                        Text("e.g. maria@pup.edu.ph")
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor =
+                            MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor =
+                            MaterialTheme.colorScheme.secondary,
+                        focusedTextColor =
+                            MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor =
+                            MaterialTheme.colorScheme.onSurface,
+                        cursorColor =
+                            MaterialTheme.colorScheme.primary
+                    )
                 )
+
                 Text(
-                    text     = "The user must already have a CollabWise account.",
+                    text = "The user must already have a CollabWise account.",
                     fontSize = 11.sp,
-                    color    = Color(0xFF5F6368),
+                    color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
         },
+
         confirmButton = {
             Button(
-                onClick  = { if (email.isNotBlank()) onInvite(email.trim()) },
-                enabled  = email.isNotBlank() && !isLoading,
-                colors   = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                onClick = {
+                    if (email.isNotBlank()) {
+                        onInvite(email.trim())
+                    }
+                },
+                enabled = email.isNotBlank() && !isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor =
+                        MaterialTheme.colorScheme.primary,
+                    contentColor =
+                        MaterialTheme.colorScheme.onPrimary
+                ),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color       = Color.White,
-                        modifier    = Modifier.size(16.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(16.dp),
                         strokeWidth = 2.dp
                     )
                 } else {
@@ -529,9 +739,16 @@ fun InviteDialog(
                 }
             }
         },
+
         dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isLoading) {
-                Text("Cancel")
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isLoading
+            ) {
+                Text(
+                    text = "Cancel",
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     )
@@ -546,68 +763,155 @@ fun CreateProjectDialog(
     onDismiss: () -> Unit,
     onCreate: (name: String, description: String) -> Unit
 ) {
+
     var name by remember { mutableStateOf("") }
     var desc by remember { mutableStateOf("") }
 
     AlertDialog(
-        onDismissRequest = { if (!isLoading) onDismiss() },
-        title = { Text("Create project", fontWeight = FontWeight.Medium) },
+        onDismissRequest = {
+            if (!isLoading) onDismiss()
+        },
+        containerColor =
+            MaterialTheme.colorScheme.surface,
+        title = {
+            Text(
+                text = "Create project",
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
         text = {
             Column {
                 if (errorMessage != null) {
                     Card(
-                        colors   = CardDefaults.cardColors(containerColor = Color(0xFFFCE8E8)),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                        colors = CardDefaults.cardColors(
+                            containerColor =
+                                MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp)
                     ) {
                         Text(
-                            text     = errorMessage,
-                            color    = Color(0xFFC5221F),
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
                             fontSize = 12.sp,
                             modifier = Modifier.padding(10.dp)
                         )
                     }
                 }
+
                 OutlinedTextField(
-                    value         = name,
-                    onValueChange = { name = it },
-                    label         = { Text("Project name") },
-                    placeholder   = { Text("e.g. Accounting Week 2026") },
-                    singleLine    = true,
-                    isError       = errorMessage != null && name.isBlank(),
-                    modifier      = Modifier
+                    value = name,
+                    onValueChange = {
+                        name = it
+                    },
+                    label = {
+                        Text(
+                            "Project name"
+                        )
+                    },
+                    placeholder = {
+                        Text(
+                            "e.g. Accounting Week 2026"
+                        )
+                    },
+                    singleLine = true,
+                    isError =
+                        errorMessage != null && name.isBlank(),
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 12.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor =
+                            MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor =
+                            MaterialTheme.colorScheme.secondary,
+                        focusedTextColor =
+                            MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor =
+                            MaterialTheme.colorScheme.onSurface,
+                        cursorColor =
+                            MaterialTheme.colorScheme.primary
+                    )
                 )
+
                 OutlinedTextField(
-                    value         = desc,
-                    onValueChange = { desc = it },
-                    label         = { Text("Description (optional)") },
-                    placeholder   = { Text("e.g. Annual accounting org event") },
-                    singleLine    = true,
-                    modifier      = Modifier.fillMaxWidth()
+                    value = desc,
+                    onValueChange = {
+                        desc = it
+                    },
+                    label = {
+                        Text(
+                            "Description (optional)"
+                        )
+                    },
+                    placeholder = {
+                        Text(
+                            "e.g. Annual accounting org event"
+                        )
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor =
+                            MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor =
+                            MaterialTheme.colorScheme.secondary,
+                        focusedTextColor =
+                            MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor =
+                            MaterialTheme.colorScheme.onSurface,
+                        cursorColor =
+                            MaterialTheme.colorScheme.primary
+                    )
                 )
             }
         },
+
         confirmButton = {
             Button(
-                onClick  = { if (name.isNotBlank()) onCreate(name, desc) },
-                enabled  = name.isNotBlank() && !isLoading,
-                colors   = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                onClick = {
+                    if (name.isNotBlank()) {
+                        onCreate(name, desc)
+                    }
+                },
+                enabled =
+                    name.isNotBlank() && !isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor =
+                        MaterialTheme.colorScheme.primary,
+                    contentColor =
+                        MaterialTheme.colorScheme.onPrimary
+                ),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color       = Color.White,
-                        modifier    = Modifier.size(16.dp),
+                        color =
+                            MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(16.dp),
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Create", fontWeight = FontWeight.Medium)
+                    Text(
+                        text = "Create",
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !isLoading) {
-                Text("Cancel")
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isLoading
+            ) {
+                Text(
+                    text = "Cancel",
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     )

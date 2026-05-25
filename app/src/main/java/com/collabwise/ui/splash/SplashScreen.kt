@@ -18,9 +18,7 @@ import com.collabwise.R
 @Composable
 fun SplashScreen() {
 
-    val appNameFont = FontFamily(
-        Font(R.font.protest_riot_regular)
-    )
+    val appNameFont = FontFamily(Font(R.font.protest_riot_regular))
 
     Column(
         modifier = Modifier

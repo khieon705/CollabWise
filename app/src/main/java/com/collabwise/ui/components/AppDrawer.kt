@@ -11,11 +11,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.collabwise.R
+
 
 @Composable
 fun AppDrawer(
@@ -24,28 +24,46 @@ fun AppDrawer(
     onTodoClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
+
     Column(
         modifier = Modifier
             .fillMaxHeight()
             .width(280.dp)
-            .background(Color.White) // 👈 makes it solid
+            .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp)
     ) {
-
         Text(
-            "CollabWise",
+            text = "CollabWise",
             style = MaterialTheme.typography.headlineSmall,
-            fontFamily = FontFamily(Font(R.font.protest_riot_regular))
+            fontFamily = FontFamily(
+                Font(R.font.protest_riot_regular)
+            ),
+            color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(Modifier.height(24.dp))
 
-        DrawerItem("Groups", onClick = onGroupsClick)
-        DrawerItem("Notifications", onClick = onNotificationsClick)
-        DrawerItem("Todo", onClick = onTodoClick)
+        DrawerItem(
+            title = "Groups",
+            onClick = onGroupsClick
+        )
+
+        DrawerItem(
+            title = "Notifications",
+            onClick = onNotificationsClick
+        )
+
+        DrawerItem(
+            title = "Todo",
+            onClick = onTodoClick
+        )
 
         Spacer(Modifier.weight(1f))
 
-        DrawerItem("Logout", isDestructive = true, onClick = onLogoutClick)
+        DrawerItem(
+            title = "Logout",
+            isDestructive = true,
+            onClick = onLogoutClick
+        )
     }
 }

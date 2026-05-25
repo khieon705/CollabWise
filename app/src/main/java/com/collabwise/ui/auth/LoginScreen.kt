@@ -1,5 +1,6 @@
 package com.collabwise.ui.auth
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -31,20 +31,15 @@ fun LoginScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
 
-    // ── FORM STATE ─────────────────────────────────────────────
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // ── VIEWMODEL STATE ────────────────────────────────────────
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
+
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // ── NAVIGATION IS HANDLED BY NAVHOST ───────────────────────
-    // (so we do NOTHING here)
-
-    // Optional: just clear error display
     LaunchedEffect(error) {
         error?.let {
             snackbarHostState.showSnackbar(it)
@@ -54,12 +49,16 @@ fun LoginScreen(
     val appNameFont = FontFamily(Font(R.font.protest_riot_regular))
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        }
     ) { padding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,7 +77,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(50.dp))
 
-            // EMAIL
             EmailTextField(
                 email = email,
                 onEmailChange = { email = it }
@@ -86,7 +84,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // PASSWORD
             PasswordTextField(
                 password = password,
                 onPasswordChange = { password = it },
@@ -96,25 +93,35 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // LOGIN BUTTON
             Button(
                 onClick = {
                     viewModel.login(email, password)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(6.dp),
-                enabled = !isLoading
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
+
                 if (isLoading) {
+
                     CircularProgressIndicator(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(20.dp)
                     )
+
                 } else {
-                    Text("Sign In", fontWeight = FontWeight.Bold)
+
+                    Text(
+                        text = "Sign In",
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
 
@@ -129,14 +136,17 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // REGISTER NAVIGATION ONLY (allowed)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 40.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text("New to CollabWise? ")
+
+                Text(
+                    text = "New to CollabWise? ",
+                    color = MaterialTheme.colorScheme.secondary
+                )
 
                 Text(
                     text = "Sign up",
@@ -156,32 +166,48 @@ fun EmailTextField(
     email: String,
     onEmailChange: (String) -> Unit
 ) {
+
     OutlinedTextField(
         value = email,
         onValueChange = onEmailChange,
+
         label = {
             Text(
                 text = "Email",
-                color = MaterialTheme.colorScheme.tertiary
+                color = MaterialTheme.colorScheme.secondary
             )
         },
-        modifier = Modifier
-            .fillMaxWidth(),
+
+        modifier = Modifier.fillMaxWidth(),
+
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
         ),
+
+        singleLine = true,
+
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFF008C8C),
-            unfocusedBorderColor = MaterialTheme.colorScheme.tertiary,
-            focusedTextColor = MaterialTheme.colorScheme.tertiary,
-            unfocusedTextColor = MaterialTheme.colorScheme.tertiary,
-            cursorColor = MaterialTheme.colorScheme.tertiary
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
+
+            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.secondary,
+
+            cursorColor = MaterialTheme.colorScheme.primary,
+
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface
         ),
-        shape = RoundedCornerShape(4.dp),
+
+        shape = RoundedCornerShape(12.dp),
+
         textStyle = LocalTextStyle.current.copy(
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.tertiary
+            color = MaterialTheme.colorScheme.onBackground
         )
     )
 }
@@ -193,45 +219,77 @@ fun PasswordTextField(
     passwordVisible: Boolean,
     onPasswordVisible: (Boolean) -> Unit
 ) {
+
     OutlinedTextField(
         value = password,
         onValueChange = onPasswordChange,
+
         label = {
             Text(
                 text = "Password",
-                color = MaterialTheme.colorScheme.tertiary
+                color = MaterialTheme.colorScheme.secondary
             )
         },
-        modifier = Modifier
-            .fillMaxWidth(),
-        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+
+        modifier = Modifier.fillMaxWidth(),
+
+        visualTransformation =
+            if (passwordVisible)
+                VisualTransformation.None
+            else
+                PasswordVisualTransformation(),
+
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done
         ),
+
         trailingIcon = {
+
             IconButton(
-                onClick = { onPasswordVisible(!passwordVisible) }
+                onClick = {
+                    onPasswordVisible(!passwordVisible)
+                }
             ) {
+
                 Icon(
-                    imageVector = if (passwordVisible)
-                        Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                    imageVector =
+                        if (passwordVisible)
+                            Icons.Default.Visibility
+                        else
+                            Icons.Default.VisibilityOff,
+
                     contentDescription = "Toggle password visibility",
+
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
         },
+
+        singleLine = true,
+
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFF008C8C),
-            unfocusedBorderColor = MaterialTheme.colorScheme.tertiary,
-            focusedTextColor = MaterialTheme.colorScheme.tertiary,
-            unfocusedTextColor = MaterialTheme.colorScheme.tertiary,
-            cursorColor = MaterialTheme.colorScheme.tertiary
+
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
+
+            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.secondary,
+
+            cursorColor = MaterialTheme.colorScheme.primary,
+
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface
         ),
-        shape = RoundedCornerShape(4.dp),
+
+        shape = RoundedCornerShape(12.dp),
+
         textStyle = LocalTextStyle.current.copy(
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.tertiary
+            color = MaterialTheme.colorScheme.onBackground
         )
     )
 }

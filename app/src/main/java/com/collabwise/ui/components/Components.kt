@@ -47,10 +47,13 @@ fun UserAvatar(
     modifier: Modifier = Modifier,
     size: Int = 48
 ) {
+
     val initials = name
         .split(" ")
         .take(2)
-        .mapNotNull { it.firstOrNull()?.toString() }
+        .mapNotNull {
+            it.firstOrNull()?.toString()
+        }
         .joinToString("")
         .uppercase()
 
@@ -75,28 +78,29 @@ fun GroupCard(
     group: Group,
     onClick: () -> Unit
 ) {
-    val color = bannerColorFor(group.id)
 
+    val color = bannerColorFor(group.id)
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            .clickable {
+                onClick()
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
     ) {
-
         Column {
-
-            // ── TOP COLOR STRIP (Google Classroom style) ──
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
                     .background(color)
             ) {
-
-                // initials circle (optional Classroom-like touch)
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
@@ -117,27 +121,24 @@ fun GroupCard(
                 }
             }
 
-            // ── BODY ──
             Column(
-                modifier = Modifier.padding(12.dp)
+                modifier = Modifier.padding(14.dp)
             ) {
-
                 Text(
                     text = group.name,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
                 if (group.description.isNotBlank()) {
                     Spacer(Modifier.height(4.dp))
-
                     Text(
                         text = group.description,
                         fontSize = 13.sp,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.secondary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -145,14 +146,13 @@ fun GroupCard(
 
                 Spacer(Modifier.height(12.dp))
 
-                // footer row (simple classroom-style metadata area)
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.Group,
                         contentDescription = null,
-                        tint = Color.Gray,
+                        tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.size(16.dp)
                     )
 
@@ -161,7 +161,7 @@ fun GroupCard(
                     Text(
                         text = "Open class",
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.secondary
                     )
 
                     Spacer(Modifier.weight(1f))
@@ -169,7 +169,7 @@ fun GroupCard(
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = null,
-                        tint = Color.LightGray
+                        tint = MaterialTheme.colorScheme.secondary
                     )
                 }
             }
@@ -184,6 +184,7 @@ fun EmptyState(
     subtitle: String,
     modifier: Modifier = Modifier
 ) {
+
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -199,7 +200,7 @@ fun EmptyState(
             text = title,
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Spacer(Modifier.height(6.dp))
@@ -207,22 +208,20 @@ fun EmptyState(
         Text(
             text = subtitle,
             fontSize = 13.sp,
-            color = Color.Gray
+            color = MaterialTheme.colorScheme.secondary
         )
     }
 }
 
 @Composable
 fun LoadingOverlay() {
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
-            color = Navy
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }
-
-val Navy = Color(0xFF1F2A44)
-val Red  = Color(0xFFE53935)

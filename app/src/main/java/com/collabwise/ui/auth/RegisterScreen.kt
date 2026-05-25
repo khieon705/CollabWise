@@ -1,6 +1,7 @@
 package com.collabwise.ui.auth
 
 import android.util.Patterns
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
@@ -27,14 +27,10 @@ fun RegisterScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
 
-    // ── STATE ─────────────────────────────────────────────
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
-
-    // ── NAVIGATION HANDLED BY NAVHOST ─────────────────────
-    // (do nothing here)
 
     LaunchedEffect(error) {
         error?.let {
@@ -42,7 +38,6 @@ fun RegisterScreen(
         }
     }
 
-    // ── FORM STATE ────────────────────────────────────────
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -55,12 +50,16 @@ fun RegisterScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        }
     ) { padding ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -77,74 +76,29 @@ fun RegisterScreen(
 
             Spacer(Modifier.height(40.dp))
 
-            // ── NAME ─────────────────────────────────────
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") },
-                leadingIcon = {
-                    Icon(Icons.Default.Person, contentDescription = null)
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+            RegisterNameTextField(
+                name = name,
+                onNameChange = { name = it }
             )
 
             Spacer(Modifier.height(12.dp))
 
-            // ── EMAIL ────────────────────────────────────
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                leadingIcon = {
-                    Icon(Icons.Default.Email, contentDescription = null)
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+            RegisterEmailTextField(
+                email = email,
+                onEmailChange = { email = it }
             )
 
             Spacer(Modifier.height(12.dp))
 
-            // ── PASSWORD ────────────────────────────────
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null)
-                },
-                trailingIcon = {
-                    IconButton(
-                        onClick = { passwordVisible = !passwordVisible }
-                    ) {
-                        Icon(
-                            imageVector =
-                                if (passwordVisible)
-                                    Icons.Default.Visibility
-                                else
-                                    Icons.Default.VisibilityOff,
-                            contentDescription = null
-                        )
-                    }
-                },
-                visualTransformation =
-                    if (passwordVisible) VisualTransformation.None
-                    else PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                )
+            RegisterPasswordTextField(
+                password = password,
+                onPasswordChange = { password = it },
+                passwordVisible = passwordVisible,
+                onPasswordVisible = { passwordVisible = it }
             )
 
             Spacer(Modifier.height(20.dp))
 
-            // ── REGISTER BUTTON ─────────────────────────
             Button(
                 onClick = {
                     if (!isValid()) return@Button
@@ -153,30 +107,44 @@ fun RegisterScreen(
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(6.dp)
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
+
                 if (isLoading) {
+
                     CircularProgressIndicator(
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(20.dp)
                     )
+
                 } else {
-                    Text("Create Account")
+
+                    Text(
+                        text = "Create Account",
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
 
             Spacer(Modifier.weight(1f))
 
-            // ── BACK TO LOGIN ───────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 30.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text("Already have an account? ")
+
+                Text(
+                    text = "Already have an account? ",
+                    color = MaterialTheme.colorScheme.secondary
+                )
 
                 Text(
                     text = "Login",
@@ -191,45 +159,63 @@ fun RegisterScreen(
     }
 }
 
-
 @Composable
 fun RegisterEmailTextField(
     email: String,
     onEmailChange: (String) -> Unit
 ) {
+
     OutlinedTextField(
         value = email,
         onValueChange = onEmailChange,
+
         label = {
             Text(
                 text = "Email",
-                color = MaterialTheme.colorScheme.tertiary
+                color = MaterialTheme.colorScheme.secondary
             )
         },
-        modifier = Modifier
-            .fillMaxWidth(),
+
+        modifier = Modifier.fillMaxWidth(),
+
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
         ),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFF008C8C),
-            unfocusedBorderColor = MaterialTheme.colorScheme.tertiary,
-            focusedTextColor = MaterialTheme.colorScheme.tertiary,
-            unfocusedTextColor = MaterialTheme.colorScheme.tertiary,
-            cursorColor = MaterialTheme.colorScheme.tertiary
-        ),
-        shape = RoundedCornerShape(4.dp),
-        textStyle = LocalTextStyle.current.copy(
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.tertiary
-        ),
+
+        singleLine = true,
+
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Email,
-                contentDescription = "Email Icon"
+                contentDescription = "Email Icon",
+                tint = MaterialTheme.colorScheme.primary
             )
-        }
+        },
+
+        colors = OutlinedTextFieldDefaults.colors(
+
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
+
+            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.secondary,
+
+            cursorColor = MaterialTheme.colorScheme.primary,
+
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface
+        ),
+
+        shape = RoundedCornerShape(12.dp),
+
+        textStyle = LocalTextStyle.current.copy(
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
     )
 }
 
@@ -240,51 +226,85 @@ fun RegisterPasswordTextField(
     passwordVisible: Boolean,
     onPasswordVisible: (Boolean) -> Unit
 ) {
+
     OutlinedTextField(
         value = password,
         onValueChange = onPasswordChange,
+
         label = {
             Text(
                 text = "Password",
-                color = MaterialTheme.colorScheme.tertiary
+                color = MaterialTheme.colorScheme.secondary
             )
         },
-        modifier = Modifier
-            .fillMaxWidth(),
-        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+
+        modifier = Modifier.fillMaxWidth(),
+
+        visualTransformation =
+            if (passwordVisible)
+                VisualTransformation.None
+            else
+                PasswordVisualTransformation(),
+
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done
         ),
+
+        singleLine = true,
+
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Password,
+                contentDescription = "Password Icon",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+
         trailingIcon = {
+
             IconButton(
-                onClick = { onPasswordVisible(!passwordVisible) }
+                onClick = {
+                    onPasswordVisible(!passwordVisible)
+                }
             ) {
+
                 Icon(
-                    imageVector = if (passwordVisible)
-                        Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                    imageVector =
+                        if (passwordVisible)
+                            Icons.Default.Visibility
+                        else
+                            Icons.Default.VisibilityOff,
+
                     contentDescription = "Toggle password visibility",
+
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
         },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Password,
-                contentDescription = "Password Icon"
-            )
-        },
+
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFF008C8C),
-            unfocusedBorderColor = MaterialTheme.colorScheme.tertiary,
-            focusedTextColor = MaterialTheme.colorScheme.tertiary,
-            unfocusedTextColor = MaterialTheme.colorScheme.tertiary,
-            cursorColor = MaterialTheme.colorScheme.tertiary
+
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
+
+            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.secondary,
+
+            cursorColor = MaterialTheme.colorScheme.primary,
+
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface
         ),
-        shape = RoundedCornerShape(4.dp),
+
+        shape = RoundedCornerShape(12.dp),
+
         textStyle = LocalTextStyle.current.copy(
             fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.tertiary
+            color = MaterialTheme.colorScheme.onBackground
         )
     )
 }
@@ -294,38 +314,56 @@ fun RegisterNameTextField(
     name: String,
     onNameChange: (String) -> Unit
 ) {
+
     OutlinedTextField(
         value = name,
         onValueChange = onNameChange,
+
         label = {
             Text(
                 text = "Name",
-                color = MaterialTheme.colorScheme.tertiary
+                color = MaterialTheme.colorScheme.secondary
             )
         },
-        modifier = Modifier
-            .fillMaxWidth(),
+
+        modifier = Modifier.fillMaxWidth(),
+
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
         ),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFF008C8C),
-            unfocusedBorderColor = MaterialTheme.colorScheme.tertiary,
-            focusedTextColor = MaterialTheme.colorScheme.tertiary,
-            unfocusedTextColor = MaterialTheme.colorScheme.tertiary,
-            cursorColor = MaterialTheme.colorScheme.tertiary
-        ),
-        shape = RoundedCornerShape(4.dp),
-        textStyle = LocalTextStyle.current.copy(
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.tertiary
-        ),
+
+        singleLine = true,
+
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Person,
-                contentDescription = "Person Icon"
+                contentDescription = "Person Icon",
+                tint = MaterialTheme.colorScheme.primary
             )
-        }
+        },
+
+        colors = OutlinedTextFieldDefaults.colors(
+
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
+
+            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.secondary,
+
+            cursorColor = MaterialTheme.colorScheme.primary,
+
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface
+        ),
+
+        shape = RoundedCornerShape(12.dp),
+
+        textStyle = LocalTextStyle.current.copy(
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
     )
 }
