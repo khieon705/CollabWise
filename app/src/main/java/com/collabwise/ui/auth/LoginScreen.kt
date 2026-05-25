@@ -39,8 +39,6 @@ fun LoginScreen(
     // ── VIEWMODEL STATE ────────────────────────────────────────
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
-    val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
-
     val snackbarHostState = remember { SnackbarHostState() }
 
     // ── NAVIGATION IS HANDLED BY NAVHOST ───────────────────────
@@ -81,44 +79,19 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(50.dp))
 
             // EMAIL
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                )
+            EmailTextField(
+                email = email,
+                onEmailChange = { email = it }
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // PASSWORD
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                visualTransformation =
-                    if (passwordVisible) VisualTransformation.None
-                    else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(
-                        onClick = { passwordVisible = !passwordVisible }
-                    ) {
-                        Icon(
-                            imageVector =
-                                if (passwordVisible)
-                                    Icons.Default.Visibility
-                                else
-                                    Icons.Default.VisibilityOff,
-                            contentDescription = null
-                        )
-                    }
-                }
+            PasswordTextField(
+                password = password,
+                onPasswordChange = { password = it },
+                passwordVisible = passwordVisible,
+                onPasswordVisible = { passwordVisible = it }
             )
 
             Spacer(modifier = Modifier.height(20.dp))

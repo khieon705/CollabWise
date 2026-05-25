@@ -2,16 +2,19 @@ package com.collabwise.ui.navigation
 
 sealed class Screen(val route: String) {
 
-    // ── Public ────────────────────────────────────────────────────────────────
+    // ── Splash ───────────────────────────────────────────────────────────────
+    data object Splash : Screen("splash")
+
+    // ── Public ───────────────────────────────────────────────────────────────
     data object Login : Screen("login")
     data object Register : Screen("register")
 
-    // ── Authenticated ─────────────────────────────────────────────────────────
+    // ── Authenticated ────────────────────────────────────────────────────────
     data object Dashboard : Screen("dashboard")
     data object Notifications : Screen("notifications")
     data object Profile : Screen("profile")
 
-    // ── Organization ──────────────────────────────────────────────────────────
+    // ── Organization ─────────────────────────────────────────────────────────
     data object Organization : Screen("organization/{organizationId}") {
 
         const val ARG_ORGANIZATION_ID = "organizationId"
@@ -21,7 +24,7 @@ sealed class Screen(val route: String) {
         }
     }
 
-    // ── Project ───────────────────────────────────────────────────────────────
+    // ── Project ──────────────────────────────────────────────────────────────
     data object Project : Screen("project/{organizationId}/{projectId}") {
 
         const val ARG_ORGANIZATION_ID = "organizationId"

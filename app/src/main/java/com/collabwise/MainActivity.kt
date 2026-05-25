@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,6 +20,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,10 +30,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.collabwise.data.repository.AuthState
 import com.collabwise.ui.auth.LoginScreen
 import com.collabwise.ui.auth.RegisterScreen
 import com.collabwise.ui.dashboard.DashboardScreen
 import com.collabwise.ui.navigation.Screen
+import com.collabwise.ui.splash.SplashScreen
 import com.collabwise.ui.theme.CollabwiseTheme
 import com.collabwise.viewmodel.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -71,28 +75,45 @@ fun AppNavGraph(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
 
-    val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
+    val authState by viewModel.authState.collectAsStateWithLifecycle()
 
-    // SINGLE navigation authority
-    LaunchedEffect(isLoggedIn) {
+    LaunchedEffect(authState) {
 
-        val destination = if (isLoggedIn) {
-            Screen.Dashboard.route
-        } else {
-            Screen.Login.route
-        }
+        when (authState) {
 
-        navController.navigate(destination) {
-            popUpTo(0) { inclusive = true }
-            launchSingleTop = true
+            AuthState.Loading -> Unit
+
+            AuthState.Authenticated -> {
+                navController.navigate(Screen.Dashboard.route) {
+                    popUpTo(Screen.Splash.route) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            }
+
+            AuthState.Unauthenticated -> {
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(Screen.Splash.route) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            }
         }
     }
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = Screen.Splash.route
     ) {
 
+        // ── SPLASH ───────────────────────────────
+        composable(Screen.Splash.route) {
+            SplashScreen()
+        }
+
+        // ── LOGIN ───────────────────────────────
         composable(Screen.Login.route) {
             LoginScreen(
                 onNavigateToRegister = {
@@ -101,6 +122,7 @@ fun AppNavGraph(
             )
         }
 
+        // ── REGISTER ────────────────────────────
         composable(Screen.Register.route) {
             RegisterScreen(
                 onNavigateToLogin = {
@@ -109,10 +131,13 @@ fun AppNavGraph(
             )
         }
 
+        // ── DASHBOARD ───────────────────────────
         composable(Screen.Dashboard.route) {
             DashboardScreen(
                 onGroupClick = { groupId ->
-                    navController.navigate(Screen.Organization.createRoute(groupId))
+                    navController.navigate(
+                        Screen.Organization.createRoute(groupId)
+                    )
                 },
                 onNotificationsClick = {
                     navController.navigate(Screen.Notifications.route)

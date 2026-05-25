@@ -28,19 +28,33 @@ class AuthViewModel @Inject constructor(
 
     // ── AUTH STATE (SOURCE OF TRUTH) ───────────────────────────
 
-    val isLoggedIn: StateFlow<Boolean> =
-        authRepository.authState
-            .map { state ->
-                state is AuthState.LoggedIn
-            }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = false
-            )
+    val authState = authRepository.authState
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            AuthState.Loading
+        )
 
     init {
-        loadCurrentUser()
+
+        viewModelScope.launch {
+
+            authState.collect { state ->
+
+                when (state) {
+
+                    AuthState.Authenticated -> {
+                        loadCurrentUser()
+                    }
+
+                    AuthState.Unauthenticated -> {
+                        _currentUser.value = null
+                    }
+
+                    AuthState.Loading -> Unit
+                }
+            }
+        }
     }
 
     // ── LOGIN ─────────────────────────────────────────────────

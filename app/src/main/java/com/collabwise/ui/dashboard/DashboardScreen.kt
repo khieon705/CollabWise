@@ -1,5 +1,6 @@
 package com.collabwise.ui.dashboard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -23,6 +26,7 @@ import com.collabwise.ui.components.LoadingOverlay
 import com.collabwise.ui.components.Navy
 import com.collabwise.ui.components.UserAvatar
 import com.collabwise.viewmodel.DashboardViewModel
+import com.collabwise.R
 
 private val bannerColors = listOf(
     Color(0xFF1a73e8), Color(0xFFe53935), Color(0xFF2e7d32),
@@ -57,46 +61,58 @@ fun DashboardScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row {
-                        Text("Collab", fontSize = 22.sp, color = Navy)
-                        Text("Wise", fontSize = 22.sp, color = Color.Red)
-                    }
-                },
-                actions = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .background(Color.White)
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "CollabWise",
+                    fontSize = 18.sp,
+                    color = Color.Green,
+                    fontFamily = FontFamily(
+                        Font(R.font.protest_riot_regular)
+                    ),
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 10.dp)
+                )
 
-                    BadgedBox(
-                        badge = {
-                            if (uiState.unreadCount > 0) {
-                                Badge {
-                                    Text(
-                                        if (uiState.unreadCount > 9) "9+" else uiState.unreadCount.toString()
-                                    )
-                                }
+                Spacer(Modifier.weight(1f))
+
+                BadgedBox(
+                    badge = {
+                        if (uiState.unreadCount > 0) {
+                            Badge {
+                                Text(
+                                    if (uiState.unreadCount > 9) "9+" else uiState.unreadCount.toString(),
+                                    fontSize = 10.sp
+                                )
                             }
                         }
-                    ) {
-                        IconButton(onClick = onNotificationsClick) {
-                            Icon(Icons.Default.Notifications, contentDescription = null)
-                        }
                     }
+                ) {
+                    IconButton(onClick = onNotificationsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = null
+                        )
+                    }
+                }
 
-                    IconButton(onClick = onProfileClick) {
-                        if (uiState.currentUser != null) {
-                            UserAvatar(
-                                name = uiState.currentUser!!.name,
-                                size = 32
-                            )
-                        } else {
-                            Icon(Icons.Default.Person, contentDescription = null)
-                        }
+                IconButton(onClick = onProfileClick) {
+                    if (uiState.currentUser != null) {
+                        UserAvatar(
+                            name = uiState.currentUser!!.name,
+                            size = 28
+                        )
+                    } else {
+                        Icon(Icons.Default.Person, contentDescription = null)
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
-            )
+                }
+            }
         },
 
         // ✅ FIXED: no global role assumption anymore

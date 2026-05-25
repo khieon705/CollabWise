@@ -7,6 +7,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -14,8 +15,9 @@ import javax.inject.Singleton
 // ── AUTH STATE ───────────────────────────────────────────────────────────────
 
 sealed class AuthState {
-    data object LoggedOut : AuthState()
-    data class LoggedIn(val user: User) : AuthState()
+    data object Loading : AuthState()
+    data object Authenticated : AuthState()
+    data object Unauthenticated : AuthState()
 }
 
 @Singleton
@@ -37,48 +39,28 @@ class AuthRepository @Inject constructor(
 
     val authState: Flow<AuthState> = callbackFlow {
 
-        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+        trySend(AuthState.Loading)
 
-            val firebaseUser = firebaseAuth.currentUser
+        val listener = FirebaseAuth.AuthStateListener { auth ->
 
-            if (firebaseUser == null) {
-                trySend(AuthState.LoggedOut)
-                return@AuthStateListener
-            }
+            val user = auth.currentUser
 
-            // Fetch user profile from Firestore
-            db.collection("users")
-                .document(firebaseUser.uid)
-                .get()
-                .addOnSuccessListener { snapshot ->
-
-                    val user = snapshot.toObject(User::class.java)
-
-                    if (user != null) {
-                        trySend(AuthState.LoggedIn(user))
-                    } else {
-                        trySend(AuthState.LoggedOut)
-                    }
+            trySend(
+                if (user != null) {
+                    AuthState.Authenticated
+                } else {
+                    AuthState.Unauthenticated
                 }
-                .addOnFailureListener {
-                    trySend(AuthState.LoggedOut)
-                }
+            )
         }
 
-        // register listener
         auth.addAuthStateListener(listener)
-
-        // initial emission (prevents empty UI state)
-        val initialUser = auth.currentUser
-
-        if (initialUser == null) {
-            trySend(AuthState.LoggedOut)
-        }
 
         awaitClose {
             auth.removeAuthStateListener(listener)
         }
-    }
+
+    }.distinctUntilChanged()
 
     // ── REGISTER ───────────────────────────────────────────────────────────
 

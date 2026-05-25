@@ -30,7 +30,6 @@ fun RegisterScreen(
     // ── STATE ─────────────────────────────────────────────
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
-    val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 

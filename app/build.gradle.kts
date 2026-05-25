@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.compose.foundation)
     ksp(libs.hilt.android.compiler)
 
     // Firebase
