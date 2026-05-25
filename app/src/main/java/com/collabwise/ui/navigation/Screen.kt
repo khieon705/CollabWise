@@ -14,13 +14,14 @@ sealed class Screen(val route: String) {
     data object Notifications : Screen("notifications")
     data object Profile : Screen("profile")
 
-    // ── Organization ─────────────────────────────────────────────────────────
-    data object Organization : Screen("organization/{organizationId}") {
 
-        const val ARG_ORGANIZATION_ID = "organizationId"
+    // ── Group ────────────────────────────────────────────────────────────────
+    data object Group : Screen("group/{groupId}") {
 
-        fun createRoute(organizationId: String): String {
-            return "organization/$organizationId"
+        const val ARG_GROUP_ID = "groupId"
+
+        fun createRoute(groupId: String): String {
+            return "group/$groupId"
         }
     }
 

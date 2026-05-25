@@ -27,13 +27,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.collabwise.data.repository.AuthState
 import com.collabwise.ui.auth.LoginScreen
 import com.collabwise.ui.auth.RegisterScreen
 import com.collabwise.ui.dashboard.DashboardScreen
+import com.collabwise.ui.group.GroupScreen
 import com.collabwise.ui.navigation.Screen
 import com.collabwise.ui.splash.SplashScreen
 import com.collabwise.ui.theme.CollabwiseTheme
@@ -136,7 +139,7 @@ fun AppNavGraph(
             DashboardScreen(
                 onGroupClick = { groupId ->
                     navController.navigate(
-                        Screen.Organization.createRoute(groupId)
+                        Screen.Group.createRoute(groupId)
                     )
                 },
                 onNotificationsClick = {
@@ -144,6 +147,27 @@ fun AppNavGraph(
                 },
                 onProfileClick = {
                     navController.navigate(Screen.Profile.route)
+                }
+            )
+        }
+
+        // ── GROUP ───────────────────────────
+        composable(
+            route = Screen.Group.route,
+            arguments = listOf(
+                navArgument(Screen.Group.ARG_GROUP_ID) {
+                    type = NavType.StringType
+                }
+            )
+        ) {
+            GroupScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onProjectClick = { groupId, projectId ->
+                    navController.navigate(
+                        Screen.Project.createRoute(groupId, projectId)
+                    )
                 }
             )
         }

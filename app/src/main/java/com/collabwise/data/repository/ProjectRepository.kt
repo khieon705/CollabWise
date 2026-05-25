@@ -17,7 +17,6 @@ class ProjectRepository @Inject constructor(
 ) {
 
     private val projectsRef = db.collection("projects")
-
     // ── Create ────────────────────────────────────────────────
 
     suspend fun createProject(
@@ -39,9 +38,16 @@ class ProjectRepository @Inject constructor(
             createdAt = System.currentTimeMillis()
         )
 
-        projectsRef.document(projectId)
-            .set(project)
-            .await()
+        try {
+            projectsRef.document(projectId)
+                .set(project)
+                .await()
+
+            println("🔥 WRITE SUCCESS")
+        } catch (e: Exception) {
+            println("❌ WRITE FAILED")
+            e.printStackTrace()
+        }
 
         return project
     }
