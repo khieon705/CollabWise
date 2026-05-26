@@ -26,16 +26,16 @@ sealed class Screen(val route: String) {
     }
 
     // ── Project ──────────────────────────────────────────────────────────────
-    data object Project : Screen("project/{organizationId}/{projectId}") {
+    data object Project : Screen("project/{groupId}/{projectId}") {
 
-        const val ARG_ORGANIZATION_ID = "organizationId"
+        const val ARG_ORGANIZATION_ID = "groupId"
         const val ARG_PROJECT_ID = "projectId"
 
         fun createRoute(
-            organizationId: String,
+            groupId: String,
             projectId: String
         ): String {
-            return "project/$organizationId/$projectId"
+            return "project/$groupId/$projectId"
         }
     }
 }

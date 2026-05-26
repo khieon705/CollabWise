@@ -38,6 +38,7 @@ import com.collabwise.ui.auth.RegisterScreen
 import com.collabwise.ui.dashboard.DashboardScreen
 import com.collabwise.ui.group.GroupScreen
 import com.collabwise.ui.navigation.Screen
+import com.collabwise.ui.profile.ProfileScreen
 import com.collabwise.ui.splash.SplashScreen
 import com.collabwise.ui.theme.CollabwiseTheme
 import com.collabwise.viewmodel.AuthViewModel
@@ -185,24 +186,21 @@ fun AppNavGraph(
                 }
             )
         }
-    }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ProfileScreen(onBackClick: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        TopAppBar(
-            title = { Text("Profile") },
-            navigationIcon = {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+        // PROFILE
+        composable(Screen.Profile.route) {
+
+            ProfileScreen(
+
+                onBack = {
+                    navController.popBackStack()
+                },
+
+                onLogout = {
+                    viewModel.logout()
                 }
-            }
-        )
-        Text("Profile Screen", modifier = Modifier.padding(16.dp))
+            )
+        }
     }
 }
 

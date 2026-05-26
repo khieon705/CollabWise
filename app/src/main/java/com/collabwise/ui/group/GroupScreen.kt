@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -285,7 +284,7 @@ private fun ProjectsTab(
                     "Tap + to create the first project."
                 else
                     "No projects have been created yet.",
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxSize().padding(top = 64.dp)
         )
         return
     }
