@@ -1,5 +1,7 @@
 package com.collabwise.data.model
 
+import java.time.LocalDate
+
 data class User(
     val uid: String = "",
     val name: String = "",
@@ -36,18 +38,26 @@ data class Task(
     val projectId: String = "",
     val groupId: String = "",
     val title: String = "",
+    val description: String = "",
     val status: String = TaskStatus.LOCKED.name,
-    val assignedMemberId: String? = null,
+    val assignedMemberId: String = "",
+    val assignedMemberName: String = "",
     val requiredSkillIds: List<String> = emptyList(),
     val dependsOn: List<String> = emptyList(),
-    val dueDate: Long? = null
+    val dueDate: String = LocalDate.now().plusDays(1).toString(),
+    val createdAt: Long = 0L
 )
 
 data class Notification(
     val userId: String = "",
     val taskId: String = "",
+    val projectId: String = "",
+    val groupId: String = "",
+    val taskTitle: String = "",
+    val projectName: String = "",
     val message: String = "",
     val isRead: Boolean = false,
+    val createdAt: Long = 0L
 )
 
 data class Skill(
@@ -70,7 +80,9 @@ enum class MemberRole{
 enum class TaskStatus{
     LOCKED,
     IN_PROGRESS,
-    DONE
+    DONE,
+
+    AVAILABLE
 }
 
 enum class ProjectStatus{

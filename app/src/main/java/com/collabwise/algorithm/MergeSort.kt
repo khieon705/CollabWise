@@ -1,12 +1,15 @@
 package com.collabwise.algorithm
 
 import com.collabwise.data.model.Task
+import com.collabwise.data.model.TaskStatus
+import java.time.LocalDate
 
 object MergeSort {
 
     fun sort(tasks: List<Task>): List<Task> {
-
-        if (tasks.size <= 1) return tasks
+        if (tasks.size <= 1) {
+            return tasks
+        }
 
         val mid = tasks.size / 2
 
@@ -27,7 +30,6 @@ object MergeSort {
         var j = 0
 
         while (i < left.size && j < right.size) {
-
             if (compare(left[i], right[j])) {
                 result.add(left[i])
                 i++
@@ -38,43 +40,50 @@ object MergeSort {
         }
 
         while (i < left.size) {
-            result.add(left[i])
-            i++
+            result.add(left[i++])
         }
 
         while (j < right.size) {
-            result.add(right[j])
-            j++
+            result.add(right[j++])
         }
 
         return result
     }
 
-    /*
-     * Comparison Rules:
-     * 1. Earlier due date first
-     * 2. TODO before IN_PROGRESS before DONE
+    /**
+     * Sorting Rules
+     *
+     * 1. IN_PROGRESS first
+     * 2. LOCKED second
+     * 3. DONE last
+     * 4. Earlier due date first
      */
-    private fun compare(a: Task, b: Task): Boolean {
+    private fun compare(
+        a: Task,
+        b: Task
+    ): Boolean {
 
-        val aDue = a.dueDate ?: Long.MAX_VALUE
-        val bDue = b.dueDate ?: Long.MAX_VALUE
+        val aRank = statusRank(a.status)
+        val bRank = statusRank(b.status)
 
-        // earlier due date wins
-        if (aDue != bDue) {
-            return aDue < bDue
+        if (aRank != bRank) {
+            return aRank < bRank
         }
 
-        // compare status priority
-        return statusRank(a.status) < statusRank(b.status)
+        val aDue = runCatching { LocalDate.parse(a.dueDate) }
+            .getOrDefault(LocalDate.MAX)
+
+        val bDue = runCatching { LocalDate.parse(b.dueDate) }
+            .getOrDefault(LocalDate.MAX)
+
+        return aDue < bDue
     }
 
     private fun statusRank(status: String): Int {
-
         return when (status) {
-            "TODO" -> 0
-            "IN_PROGRESS" -> 1
-            "DONE" -> 2
+            TaskStatus.IN_PROGRESS.name -> 0
+            TaskStatus.LOCKED.name -> 1
+            TaskStatus.DONE.name -> 2
             else -> 3
         }
     }

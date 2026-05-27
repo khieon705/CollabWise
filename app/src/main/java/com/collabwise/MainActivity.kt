@@ -39,6 +39,7 @@ import com.collabwise.ui.dashboard.DashboardScreen
 import com.collabwise.ui.group.GroupScreen
 import com.collabwise.ui.navigation.Screen
 import com.collabwise.ui.profile.ProfileScreen
+import com.collabwise.ui.project.ProjectScreen
 import com.collabwise.ui.splash.SplashScreen
 import com.collabwise.ui.theme.CollabwiseTheme
 import com.collabwise.viewmodel.AuthViewModel
@@ -201,75 +202,27 @@ fun AppNavGraph(
                 }
             )
         }
-    }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SkillsScreen(onBackClick: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        TopAppBar(
-            title = { Text("Skills") },
-            navigationIcon = {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+        // PROJECT
+        composable(
+            route = Screen.Project.route,
+            arguments = listOf(
+                navArgument(Screen.Project.ARG_GROUP_ID) {
+                    type = NavType.StringType
+                },
+                navArgument(Screen.Project.ARG_PROJECT_ID) {
+                    type = NavType.StringType
                 }
-            }
-        )
-        Text("Skills Screen", modifier = Modifier.padding(16.dp))
-    }
-}
+            )
+        ) {
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TasksScreen(onBackClick: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        TopAppBar(
-            title = { Text("Tasks") },
-            navigationIcon = {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            ProjectScreen(
+
+                onBack = {
+                    navController.popBackStack()
                 }
-            }
-        )
-        Text("Tasks Screen", modifier = Modifier.padding(16.dp))
-    }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun OrganizationsScreen(onBackClick: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        TopAppBar(
-            title = { Text("Organizations") },
-            navigationIcon = {
-                IconButton(onClick = onBackClick) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                }
-            }
-        )
-        Text("Organizations Screen", modifier = Modifier.padding(16.dp))
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    CollabwiseTheme {
-        Greeting("Android")
+            )
+        }
     }
 }

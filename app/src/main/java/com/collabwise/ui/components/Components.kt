@@ -22,6 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -198,6 +200,7 @@ fun EmptyState(
 
         Text(
             text = title,
+            textAlign = TextAlign.Center,
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground
@@ -207,6 +210,7 @@ fun EmptyState(
 
         Text(
             text = subtitle,
+            textAlign = TextAlign.Center,
             fontSize = 13.sp,
             color = MaterialTheme.colorScheme.secondary
         )
@@ -222,6 +226,29 @@ fun LoadingOverlay() {
     ) {
         CircularProgressIndicator(
             color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+fun StatusChip(
+    status: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Text(
+            text = status,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(
+                horizontal = 10.dp,
+                vertical = 3.dp
+            )
         )
     }
 }
