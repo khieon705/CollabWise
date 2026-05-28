@@ -323,27 +323,111 @@ fun TaskDetailSheet(
 
             if (isLeader && eligibleToAdd.isNotEmpty()) {
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                TextButton(
-                    onClick = { showAddDepPicker = true },
-                    contentPadding = PaddingValues(horizontal = 0.dp)
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = colors.surfaceVariant
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
 
-                    Icon(
-                        Icons.Default.AddLink,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = colors.primary
-                    )
+                    Column {
 
-                    Spacer(modifier = Modifier.width(6.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showAddDepPicker = !showAddDepPicker
+                                }
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
 
-                    Text(
-                        text = "Add prerequisite",
-                        color = colors.primary,
-                        fontSize = 13.sp
-                    )
+                            Icon(
+                                Icons.Default.AddLink,
+                                contentDescription = null,
+                                tint = colors.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                text = "Add prerequisite",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            Icon(
+                                if (showAddDepPicker)
+                                    Icons.Default.ExpandLess
+                                else
+                                    Icons.Default.ExpandMore,
+                                contentDescription = null,
+                                tint = colors.textSecondary
+                            )
+                        }
+
+                        AnimatedVisibility(visible = showAddDepPicker) {
+
+                            Column {
+
+                                HorizontalDivider(color = colors.border)
+
+                                Column(
+                                    modifier = Modifier.padding(
+                                        horizontal = 14.dp,
+                                        vertical = 10.dp
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+
+                                    Text(
+                                        text = "Select tasks that must be completed before this one.",
+                                        fontSize = 12.sp,
+                                        color = colors.textSecondary,
+                                        modifier = Modifier.padding(bottom = 4.dp)
+                                    )
+
+                                    eligibleToAdd.forEach { dependency ->
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    onAddDep(task.id, dependency.id)
+                                                }
+                                                .padding(vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+
+                                            StatusChip(status = dependency.status)
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            Text(
+                                                text = dependency.title,
+                                                fontSize = 13.sp,
+                                                modifier = Modifier.weight(1f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = "Add dependency",
+                                                tint = colors.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

@@ -38,6 +38,7 @@ import com.collabwise.ui.auth.RegisterScreen
 import com.collabwise.ui.dashboard.DashboardScreen
 import com.collabwise.ui.group.GroupScreen
 import com.collabwise.ui.navigation.Screen
+import com.collabwise.ui.notification.NotificationScreen
 import com.collabwise.ui.profile.ProfileScreen
 import com.collabwise.ui.project.ProjectScreen
 import com.collabwise.ui.splash.SplashScreen
@@ -222,6 +223,14 @@ fun AppNavGraph(
                     navController.popBackStack()
                 }
 
+            )
+        }
+
+        composable(Screen.Notifications.route) {
+            NotificationScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
             )
         }
     }

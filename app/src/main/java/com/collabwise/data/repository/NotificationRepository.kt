@@ -47,12 +47,30 @@ class NotificationRepository @Inject constructor(
      * Emits on every add or update (e.g. isRead changes).
      */
     fun observeForUser(uid: String): Flow<List<Notification>> = callbackFlow {
+
         val listener = notifRef
             .whereEqualTo("userId", uid)
             .orderBy("createdAt", Query.Direction.DESCENDING)
-            .addSnapshotListener { snap, _ ->
-                trySend(snap?.toObjects(Notification::class.java) ?: emptyList())
+            .addSnapshotListener { snap, error ->
+
+                if (error != null) {
+                    error.printStackTrace()
+                    return@addSnapshotListener
+                }
+
+                if (snap == null) {
+                    return@addSnapshotListener
+                }
+
+                val notifications = snap.documents.mapNotNull { doc ->
+
+                    doc.toObject(Notification::class.java)
+                        ?.copy(id = doc.id)
+                }
+
+                trySend(notifications)
             }
+
         awaitClose { listener.remove() }
     }
 

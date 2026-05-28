@@ -49,6 +49,7 @@ data class Task(
 )
 
 data class Notification(
+    val id: String = "",
     val userId: String = "",
     val taskId: String = "",
     val projectId: String = "",

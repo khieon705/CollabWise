@@ -149,30 +149,28 @@ fun DashboardScreen(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    BadgedBox(
-                        badge = {
-                            if (uiState.unreadCount > 0) {
-                                Badge {
-                                    Text(
-                                        text =
-                                            if (uiState.unreadCount > 9)
-                                                "9+"
-                                            else
-                                                uiState.unreadCount.toString(),
-                                        fontSize = 10.sp
-                                    )
+                    IconButton(
+                        onClick = onNotificationsClick
+                    ) {
+                        BadgedBox(
+                            badge = {
+                                if (uiState.unreadCount > 0) {
+                                    Badge {
+                                        Text(
+                                            text =
+                                                if (uiState.unreadCount > 9)
+                                                    "9+"
+                                                else
+                                                    uiState.unreadCount.toString(),
+                                            fontSize = 10.sp
+                                        )
+                                    }
                                 }
                             }
-                        }
-                    ) {
-
-                        IconButton(
-                            onClick = onNotificationsClick
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notifications",
-                                tint = MaterialTheme.colorScheme.onBackground
+                                contentDescription = "Notifications"
                             )
                         }
                     }

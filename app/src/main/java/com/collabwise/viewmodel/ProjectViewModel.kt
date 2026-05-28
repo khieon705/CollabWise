@@ -527,14 +527,21 @@ class ProjectViewModel @Inject constructor(
      * Returns all tasks that could be added as dependencies of the given task
      * without creating a cycle — i.e., tasks that do not already depend on it.
      */
-    fun getEligibleDependencies(taskId: String): List<Task> {
-        val state    = _uiState.value
-        val target   = state.tasks.find { it.id == taskId } ?: return emptyList()
-        val existing = target.dependsOn.toSet()
+    fun getEligibleDependencies(
+        taskId: String? = null
+    ): List<Task> {
+        val state = _uiState.value
 
-        return state.tasks.filter { candidate ->
-            candidate.id != taskId          // not itself
-            && candidate.id !in existing    // not already a dependency
+        return state.tasks.filter { task ->
+
+            // exclude itself only in edit mode
+            val notSelf = taskId == null || task.id != taskId
+
+            // only active/incomplete tasks
+            val validStatus =
+                task.status != TaskStatus.DONE.name
+
+            notSelf && validStatus
         }
     }
 
