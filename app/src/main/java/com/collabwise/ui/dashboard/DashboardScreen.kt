@@ -100,6 +100,13 @@ fun DashboardScreen(
                         onNavigate(Screen.Dashboard)
                     }
                 },
+                onSettingsClick = {
+                    scope.launch {
+                        drawerState.close()
+                        delay(50)
+                        onNavigate(Screen.Settings)
+                    }
+                },
                 onLogoutClick = {
                     scope.launch {
                         drawerState.close()

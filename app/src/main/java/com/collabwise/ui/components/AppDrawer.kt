@@ -22,6 +22,7 @@ fun AppDrawer(
     onGroupsClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onTodoClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
 
@@ -56,6 +57,11 @@ fun AppDrawer(
         DrawerItem(
             title = "Todo",
             onClick = onTodoClick
+        )
+
+        DrawerItem(
+            title = "Settings",
+            onClick = onSettingsClick
         )
 
         Spacer(Modifier.weight(1f))

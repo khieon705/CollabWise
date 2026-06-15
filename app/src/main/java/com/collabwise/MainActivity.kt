@@ -41,6 +41,7 @@ import com.collabwise.ui.navigation.Screen
 import com.collabwise.ui.notification.NotificationScreen
 import com.collabwise.ui.profile.ProfileScreen
 import com.collabwise.ui.project.ProjectScreen
+import com.collabwise.ui.settings.SettingsScreen
 import com.collabwise.ui.splash.SplashScreen
 import com.collabwise.ui.theme.CollabwiseTheme
 import com.collabwise.viewmodel.AuthViewModel
@@ -223,6 +224,20 @@ fun AppNavGraph(
                     navController.popBackStack()
                 }
 
+            )
+        }
+
+        composable(Screen.Settings.route) {
+
+            SettingsScreen(
+
+                onBack = {
+                    navController.popBackStack()
+                },
+
+                onLogout = {
+                    viewModel.logout()
+                }
             )
         }
 
