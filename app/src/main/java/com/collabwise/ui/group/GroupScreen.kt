@@ -220,7 +220,10 @@ fun GroupScreen(
                         projects = uiState.projects,
                         groupId = uiState.group?.id ?: "",
                         isLeader = uiState.isLeader,
-                        onProjectClick = onProjectClick
+                        onProjectClick = onProjectClick,
+                        onStatusClick = { projectId, status ->
+                            viewModel.updateProjectStatus(projectId, status)
+                        }
                     )
                 }
 
@@ -273,7 +276,8 @@ private fun ProjectsTab(
     projects: List<Project>,
     groupId: String,
     isLeader: Boolean,
-    onProjectClick: (String, String) -> Unit
+    onProjectClick: (String, String) -> Unit,
+    onStatusClick: (String, ProjectStatus) -> Unit
 ) {
     if (projects.isEmpty()) {
         EmptyState(
@@ -297,8 +301,18 @@ private fun ProjectsTab(
         items(projects, key = { it.id }) { project ->
             ProjectCard(
                 project = project,
+                isLeader = isLeader,
                 onClick = {
                     onProjectClick(groupId, project.id)
+                },
+                onStatusClick = {
+                    val newStatus =
+                        if (project.status == ProjectStatus.ACTIVE.name)
+                            ProjectStatus.COMPLETED
+                        else
+                            ProjectStatus.ACTIVE
+
+                    onStatusClick(project.id, newStatus)
                 }
             )
         }
@@ -314,7 +328,9 @@ private fun ProjectsTab(
 @Composable
 fun ProjectCard(
     project: Project,
-    onClick: () -> Unit
+    isLeader: Boolean,
+    onClick: () -> Unit,
+    onStatusClick: () -> Unit
 ) {
     val isActive = project.status == ProjectStatus.ACTIVE.name
 
@@ -342,7 +358,7 @@ fun ProjectCard(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                     else
                         MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.size(44.dp)
             ) {
                 Box(
@@ -396,7 +412,10 @@ fun ProjectCard(
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                     else
                         MaterialTheme.colorScheme.surfaceVariant,
-                shape = RoundedCornerShape(20.dp)
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.clickable(enabled = isLeader) {
+                    onStatusClick()
+                }
             ) {
                 Text(
                     text = project.status,

@@ -1,18 +1,17 @@
 package com.collabwise.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collabwise.data.model.Group
 import com.collabwise.data.model.Project
+import com.collabwise.data.model.ProjectStatus
 import com.collabwise.data.model.User
 import com.collabwise.data.repository.AuthRepository
 import com.collabwise.data.repository.GroupRepository
 import com.collabwise.data.repository.ProjectRepository
 import com.collabwise.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -47,12 +46,13 @@ class GroupViewModel @Inject constructor(
     private val projectRepository: ProjectRepository
 ) : ViewModel() {
 
-    private val groupId: String = checkNotNull(savedStateHandle[Screen.Group.ARG_GROUP_ID])
+    private val groupId = checkNotNull(
+        savedStateHandle[Screen.Group.ARG_GROUP_ID]
+    )
+
 
     private val _uiState = MutableStateFlow(GroupUiState())
     val uiState: StateFlow<GroupUiState> = _uiState.asStateFlow()
-
-    private var projectsJob: Job? = null
 
     init { load() }
 
@@ -60,17 +60,15 @@ class GroupViewModel @Inject constructor(
 
     private fun load() {
         viewModelScope.launch {
-            val user = authRepository.getCurrentUserProfile()
-            val group = groupRepository.getGroupById(groupId)
+            val user  = authRepository.getCurrentUserProfile()
+            val group = groupRepository.getGroupById(groupId as String)
 
             if (group == null) {
-                _uiState.update {
-                    it.copy(isLoading = false, error = "Group not found.")
-                }
+                _uiState.update { it.copy(isLoading = false, error = "Group not found.") }
                 return@launch
             }
 
-            val members  = groupRepository.getMembersAsUsers(groupId)
+            val members  = groupRepository.getMembersAsUsers(groupId as String)
             val isLeader = group.leaderId == user?.uid
 
             _uiState.update {
@@ -84,18 +82,9 @@ class GroupViewModel @Inject constructor(
             }
 
             // Observe projects in real time
-            observeProjects(groupId)
-        }
-    }
-
-    private fun observeProjects(groupId: String) {
-        projectsJob?.cancel()
-
-        projectsJob = viewModelScope.launch {
-            projectRepository.observeProjectsForGroup(groupId)
-                .catch { Log.e("PROJECT_FLOW", it.message ?: "") }
+            projectRepository.observeProjectsForGroup(groupId as String)
+                .catch { /* ignore */ }
                 .collect { projects ->
-                    Log.d("PROJECT_FLOW", "Firestore emitted size = ${projects.size}")
                     _uiState.update { it.copy(projects = projects) }
                 }
         }
@@ -123,7 +112,7 @@ class GroupViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _uiState.update { it.copy(isInviting = true, inviteError = null) }
-            runCatching { groupRepository.inviteMember(groupId, email.trim()) }
+            runCatching { groupRepository.inviteMember(groupId as String, email.trim()) }
                 .onSuccess { newUser ->
                     _uiState.update {
                         it.copy(
@@ -148,13 +137,12 @@ class GroupViewModel @Inject constructor(
 
     fun removeMember(userId: String) {
         val state = _uiState.value
-        // Prevent leader from removing themselves
         if (userId == state.group?.leaderId) {
             _uiState.update { it.copy(error = "The group leader cannot be removed.") }
             return
         }
         viewModelScope.launch {
-            runCatching { groupRepository.removeMember(groupId, userId) }
+            runCatching { groupRepository.removeMember(groupId as String, userId) }
                 .onSuccess {
                     _uiState.update { s ->
                         s.copy(members = s.members.filter { it.uid != userId })
@@ -186,7 +174,7 @@ class GroupViewModel @Inject constructor(
             _uiState.update { it.copy(isCreatingProject = true, createProjectError = null) }
             runCatching {
                 projectRepository.createProject(
-                    groupId     = groupId,
+                    groupId     = groupId as String,
                     name        = name.trim(),
                     description = description.trim(),
                     leaderId    = user.uid
@@ -201,6 +189,27 @@ class GroupViewModel @Inject constructor(
                         isCreatingProject  = false,
                         createProjectError = e.message ?: "Failed to create project."
                     )
+                }
+            }
+        }
+    }
+
+    // ── Update project status ─────────────────────────────────────────────────
+
+    /**
+     * Toggles a project between ACTIVE and COMPLETED.
+     * Only callable by the group leader.
+     * The Firestore observer will emit the updated project automatically,
+     * so no manual state update is needed here.
+     */
+    fun updateProjectStatus(projectId: String, newStatus: ProjectStatus) {
+        if (!_uiState.value.isLeader) return
+        viewModelScope.launch {
+            runCatching {
+                projectRepository.updateProjectStatus(projectId, newStatus)
+            }.onFailure { e ->
+                _uiState.update {
+                    it.copy(error = e.message ?: "Failed to update project status.")
                 }
             }
         }

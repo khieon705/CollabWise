@@ -88,5 +88,5 @@ enum class TaskStatus{
 
 enum class ProjectStatus{
     ACTIVE,
-    DONE
+    COMPLETED
 }

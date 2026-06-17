@@ -34,7 +34,14 @@ fun ProjectScreen(
     viewModel: ProjectViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var selectedTab by remember { mutableIntStateOf(0) }
+
+    var selectedTab by remember {
+        mutableIntStateOf(0)
+    }
+
+    var showProjectInfo by remember {
+        mutableStateOf(false)
+    }
 
     val tabs = listOf("Tasks", "Members")
     val snackbarHost = remember { SnackbarHostState() }
@@ -100,6 +107,18 @@ fun ProjectScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+                }
+
+                IconButton(
+                    onClick = {
+                        showProjectInfo = true
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Project details",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
                 }
             }
         },
@@ -255,6 +274,37 @@ fun ProjectScreen(
             onDelete = { viewModel.deleteTask(it) }
         )
     }
+
+    if (showProjectInfo) {
+
+        AlertDialog(
+            onDismissRequest = {
+                showProjectInfo = false
+            },
+
+            title = {
+                Text("Project Details")
+            },
+
+            text = {
+                Text(
+                    text = uiState.project?.description
+                        ?.takeIf { it.isNotBlank() }
+                        ?: "No description provided."
+                )
+            },
+
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showProjectInfo = false
+                    }
+                ) {
+                    Text("Close")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -360,15 +410,6 @@ private fun TaskSummaryRow(
 
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-
-        SummaryChip(
-            count = available,
-            label = "Ready",
-            color = Color(0xFF84CC16) ,
-            bg = Color(0x3384CC16),
-            modifier = Modifier.weight(1f)
-        )
-
         SummaryChip(
             count = inProgress,
             label = "Active",
