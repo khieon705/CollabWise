@@ -204,7 +204,10 @@ class ProjectViewModel @Inject constructor(
 
                     if (!validation.isValid) {
                         _uiState.update {
-                            it.copy(isCreatingTask = false, cycleError = validation.message)
+                            it.copy(
+                                isCreatingTask = false,
+                                cycleError = "Invalid dependency: circular dependency detected."
+                            )
                         }
                         return@launch
                     }

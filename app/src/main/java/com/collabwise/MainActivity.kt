@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -50,8 +51,14 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        splashScreen.setKeepOnScreenCondition {
+            false
+        }
 
         setContent {
             CollabwiseTheme {
@@ -84,35 +91,27 @@ fun AppNavGraph(
 
     val authState by viewModel.authState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(authState) {
+    // Decide start destination ONLY ONCE
+    val startDestination = when (authState) {
+        AuthState.Loading -> null
+        AuthState.Authenticated -> Screen.Dashboard.route
+        AuthState.Unauthenticated -> Screen.Login.route
+    }
 
-        when (authState) {
-
-            AuthState.Loading -> Unit
-
-            AuthState.Authenticated -> {
-                navController.navigate(Screen.Dashboard.route) {
-                    popUpTo(Screen.Splash.route) {
-                        inclusive = true
-                    }
-                    launchSingleTop = true
-                }
-            }
-
-            AuthState.Unauthenticated -> {
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Splash.route) {
-                        inclusive = true
-                    }
-                    launchSingleTop = true
-                }
-            }
+    // Show loading while auth is being checked
+    if (startDestination == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
+        return
     }
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route
+        startDestination = startDestination
     ) {
 
         // ── SPLASH ───────────────────────────────
