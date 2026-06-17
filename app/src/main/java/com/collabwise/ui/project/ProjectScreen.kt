@@ -364,32 +364,32 @@ private fun TaskSummaryRow(
         SummaryChip(
             count = available,
             label = "Ready",
-            color = colorScheme.primary,
-            bg = colorScheme.primaryContainer,
+            color = Color(0xFF84CC16) ,
+            bg = Color(0x3384CC16),
             modifier = Modifier.weight(1f)
         )
 
         SummaryChip(
             count = inProgress,
             label = "Active",
-            color = Color(0xFF22C55E),
-            bg = Color(0x3322C55E),
+            color = Color(0xFF84CC16) ,
+            bg = Color(0x3384CC16),
             modifier = Modifier.weight(1f)
         )
 
         SummaryChip(
             count = blocked,
             label = "Blocked",
-            color = colorScheme.tertiary,
-            bg = colorScheme.tertiaryContainer,
+            color = Color(0xFF84CC16) ,
+            bg = Color(0x3384CC16),
             modifier = Modifier.weight(1f)
         )
 
         SummaryChip(
             count = done,
             label = "Done",
-            color = colorScheme.secondary,
-            bg = colorScheme.secondaryContainer,
+            color = Color(0xFF84CC16) ,
+            bg = Color(0x3384CC16),
             modifier = Modifier.weight(1f)
         )
 
