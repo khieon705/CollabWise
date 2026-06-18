@@ -1,5 +1,6 @@
 package com.collabwise.algorithm
 
+import android.util.Log
 import com.collabwise.data.model.Task
 import com.collabwise.data.model.User
 
@@ -84,9 +85,14 @@ object GreedyScheduler {
         var bestScore = -1
         var lowestWorkload = Int.MAX_VALUE
 
+        // To record the overall ranking when assigning a task
+        val rankings = mutableListOf<Triple<User, Int, Int>>()
+
         for (member in members) {
             val score = skillMatchScore(task, member)
             val workload = taskCountMap[member.uid] ?: 0
+
+            rankings.add(Triple(member, score, workload))
 
             val shouldReplace =
                 score > bestScore ||
@@ -101,6 +107,18 @@ object GreedyScheduler {
                 lowestWorkload = workload
             }
         }
+
+        Log.d("GreedyScheduler","=== Task: ${task.title} Ranking ===")
+
+        rankings
+            .sortedWith(
+                compareByDescending<Triple<User, Int, Int>> { it.second }
+                    .thenBy { it.third }
+            )
+            .forEachIndexed { index, (member, score, workload) ->
+                Log.d("GreedyScheduler", "${index + 1}. ${member.name} | Skill Score: $score | Current Tasks: $workload")
+            }
+
 
         return bestMember?.let {
             AssignmentResult(
