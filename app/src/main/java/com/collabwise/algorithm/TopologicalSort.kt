@@ -1,5 +1,6 @@
 package com.collabwise.algorithm
 
+import android.util.Log
 import com.collabwise.data.model.Task
 
 data class ValidationResult(
@@ -123,6 +124,13 @@ object TopologicalSort {
         val result = sort(updatedTasks)
 
         return if (result.hasCycle) {
+            Log.e(
+                "TopologicalSort",
+                "Invalid dependency detected. Adding this dependency would create a cycle: ${
+                    result.cycleNodes.joinToString(" -> ")
+                }"
+            )
+
             ValidationResult(
                 isValid = false,
                 message =
