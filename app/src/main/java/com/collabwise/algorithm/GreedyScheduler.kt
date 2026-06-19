@@ -39,7 +39,7 @@ object GreedyScheduler {
     }
 
     /**
-     * Calculates how many required skills the member has.
+     * Calculate how many skills match sa bawat member.
      */
     private fun skillMatchScore(
         task: Task,

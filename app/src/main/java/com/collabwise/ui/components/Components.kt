@@ -161,7 +161,7 @@ fun GroupCard(
                     Spacer(Modifier.width(6.dp))
 
                     Text(
-                        text = "Open class",
+                        text = "Open group",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.secondary
                     )
