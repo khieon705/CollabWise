@@ -1,5 +1,6 @@
 package com.collabwise.algorithm
 
+import android.util.Log
 import com.collabwise.data.model.Task
 import com.collabwise.data.model.TaskStatus
 
@@ -78,6 +79,11 @@ object BfsUnlocker {
                     }
 
                 if (allPrerequisitesDone) {
+                    Log.d(
+                        "BfsUnlocker",
+                        "UNLOCKED: ${task.title} (${task.id}) because all prerequisites are completed"
+                    )
+
                     unlockedTaskIds.add(task.id)
 
                     if (!task.assignedMemberId.isNullOrBlank()) {
